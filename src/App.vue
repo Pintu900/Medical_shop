@@ -11,7 +11,6 @@
 import Contact from "./components/ContactUs.vue";
 import Navbar from "./components/Navbar.vue";
 import BodyComponent from "./components/Center.vue";
-import ComingSoon from "./components/Comingsoon.vue";
 import Call from "./components/Call.vue";
 import Timing from "./components/Timing.vue";
 import Reviews from "./components/Reviews.vue";
@@ -20,7 +19,6 @@ export default {
   components: {
     Navbar,
     BodyComponent,
-    ComingSoon,
     Contact,
     Call,
     Timing,
