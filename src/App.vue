@@ -1,0 +1,40 @@
+<template>
+  <Navbar />
+  <Timing />
+  <BodyComponent />
+  <Contact />
+  <Call phone-number="+91 8876499294" />
+  <Reviews />
+</template>
+
+<script>
+import Contact from "./components/ContactUs.vue";
+import Navbar from "./components/Navbar.vue";
+import BodyComponent from "./components/Center.vue";
+import ComingSoon from "./components/Comingsoon.vue";
+import Call from "./components/Call.vue";
+import Timing from "./components/Timing.vue";
+import Reviews from "./components/Reviews.vue";
+export default {
+  name: "App",
+  components: {
+    Navbar,
+    BodyComponent,
+    ComingSoon,
+    Contact,
+    Call,
+    Timing,
+    Reviews,
+  },
+};
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+</style>
