@@ -2,7 +2,7 @@
   <div class="container">
     <div class="content">
       <div class="left-side">
-        <img src="@/assets/doctor.png" alt="Sample Image" />
+        <img src="@/assets/doctor.webp" alt="Sample Image" />
       </div>
       <div class="right-side">
         <h2>Your Health, Our Mission</h2>
