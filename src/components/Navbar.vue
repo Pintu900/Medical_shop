@@ -13,10 +13,10 @@
     <!-- Menu Section -->
     <div :class="['navbar-menu', { 'menu-open': menuOpen }]">
       <ul class="menu-items">
-        <li><a href="#home">Home</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#services">Services</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="#home"><i class="fas fa-home icon-small"></i> Home</a></li>
+        <li><a href="#about"><i class="fas fa-address-card icon-small"></i> About</a></li>
+        <li><a href="#services"><i class="fas fa-cog icon-small"></i> Services</a></li>
+        <li><a href="#contact"><i class="fas fa-phone-square-alt icon-small"></i> Contact</a></li>
       </ul>
       <button class="signup-button">Sign Up</button>
     </div>
@@ -89,11 +89,13 @@ export default {
 
 .menu-items li a {
   text-decoration: none;
-  color: #333;
+  color: #003366;
   font-weight: 500;
   font-size: 16px;
 }
-
+.icon-small {
+  display: none; /* Hide by default */
+}
 /* Signup Button */
 .signup-button {
   background-color: #007bff;
@@ -179,12 +181,15 @@ export default {
 
   .menu-items {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
   }
 
   .menu-items li {
     margin: 10px 0;
   }
+  .icon-small {
+  display: inline; /* Hide by default */
+}
 
   .signup-button {
     margin: 15px 0;
