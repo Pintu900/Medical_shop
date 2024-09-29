@@ -12,20 +12,32 @@ export default {
     <h2>Our Offerings</h2>
     <div class="container">
       <div class="item">
+        <div class="tag">coming soon</div>
+        <div class="item1">
         <i class="fas fa-user-md"></i>
         <p>Book Doctor's Appointment</p>
       </div>
+      </div>
       <div class="item">
+        <div class="tag">coming soon</div>
+        <div class="item1">
         <i class="fas fa-tint"></i>
         <p>Book Blood Collection</p>
       </div>
+      </div>
       <div class="item">
+        <div class="tag">coming soon</div>
+        <div class="item1">
         <i class="fas fa-syringe"></i>
         <p>Diabetes Consultation</p>
       </div>
+      </div>
       <div class="item">
+        <div class="tag">coming soon</div>
+        <div class="item1">
         <i class="fas fa-shopping-cart"></i>
         <p>Order Medicine Online</p>
+      </div>
       </div>
     </div>
   </section>
@@ -66,24 +78,37 @@ h2 {
 }
 
 .item {
-  padding: 20px;
   height: 200px; /* Increased height for illustration */
   width: 200px; /* Adjust width for better fit */
   display: flex;
   flex-direction: column; /* Stack icon and text */
-  align-items: center;
-  justify-content: center;
   border: 1px solid #ccc;
   border-radius: 15px;
   background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
 }
+.tag {
+  background-color: #e74c3c; /* Slightly softer red for a modern look */
+  border-top-left-radius: 15px; /* Rounded top-left corner */
+  border-top-right-radius: 15px; /* Rounded top-right corner */
+  color: white; 
+  font-weight: 500;
+  padding: 10px 15px; 
+}
 
 .item i {
   font-size: 35px; /* Icon size */
   color: #007bff; /* Icon color */
   margin-bottom: 10px; /* Space between icon and text */
+}
+.item1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 4;
+  padding: 20px;
 }
 
 .item p {
