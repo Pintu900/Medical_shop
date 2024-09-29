@@ -2,6 +2,7 @@
   <Navbar />
   <Timing />
   <BodyComponent />
+  <Offerings/>
   <Contact />
   <Call phone-number="+91 8876499294" />
   <Reviews />
@@ -14,6 +15,7 @@ import BodyComponent from "./components/Center.vue";
 import Call from "./components/Call.vue";
 import Timing from "./components/Timing.vue";
 import Reviews from "./components/Reviews.vue";
+import Offerings from "./components/Offerings.vue";
 export default {
   name: "App",
   components: {
@@ -23,6 +25,7 @@ export default {
     Call,
     Timing,
     Reviews,
+    Offerings,
   },
 };
 </script>
