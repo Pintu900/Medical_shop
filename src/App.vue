@@ -6,6 +6,14 @@
   <Contact />
   <Call phone-number="+91 8876499294" />
   <Reviews />
+  <div class="hidden-seo">
+  medical shop near basistha chariali guwahati , 
+  medical shop near me shiv mandir ,
+  medical store near me ,
+  medical stores ,
+  Chemist store ,
+  pharmacy , pharmacy near me , shivam , shivam medical store
+</div>
 </template>
 
 <script>
@@ -38,4 +46,8 @@ export default {
   text-align: center;
   color: #2c3e50;
 }
+.hidden-seo {
+    position: absolute;
+    left: -9999px;
+  }
 </style>
