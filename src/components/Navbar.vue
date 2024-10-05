@@ -2,7 +2,9 @@
   <nav class="navbar">
     <!-- Logo Section -->
     <div class="navbar-logo">
+      <RouterLink to="/">
       <img src="@/assets/logo2.png" alt="New Shivam Medicos Logo" />
+    </RouterLink>
     </div>
 
     <!-- Hamburger Menu Icon (Mobile View) -->
@@ -13,10 +15,10 @@
     <!-- Menu Section -->
     <div :class="['navbar-menu', { 'menu-open': menuOpen }]">
       <ul class="menu-items">
-        <li><a href="#home"><i class="fas fa-home icon-small"></i> Home</a></li>
-        <li><a href="#about"><i class="fas fa-address-card icon-small"></i> About</a></li>
-        <li><a href="#services"><i class="fas fa-cog icon-small"></i> Services</a></li>
-        <li><a href="#contact"><i class="fas fa-phone-square-alt icon-small"></i> Contact</a></li>
+        <li><RouterLink to="/"><i class="fas fa-home icon-small"></i> Home</RouterLink></li>
+        <li><RouterLink to="/about"><i class="fas fa-address-card icon-small"></i> About</RouterLink></li>
+        <li><RouterLink to="/services"><i class="fas fa-cog icon-small"></i> Services</RouterLink></li>
+        <li><RouterLink to="/contact"><i class="fas fa-phone-square-alt icon-small"></i> Contact</RouterLink></li>
       </ul>
       <button class="signup-button">Sign Up</button>
     </div>
@@ -82,9 +84,20 @@ export default {
   padding: 0;
   box-sizing: border-box; /* Includes padding and border in the width */
 }
+.menu-items li{
+  margin: 0 2px;
+}
 
-.menu-items li {
-  margin: 0 15px; /* Adjust margin as necessary */
+li a.router-link-exact-active {
+  border-bottom: 2px solid rgb(13, 22, 33);
+}
+li a.router-link-exact-active:hover {
+  background-color: transparent;
+}
+
+li a:hover{
+  background-color: rgba(106, 181, 242, 0.52);
+  transition:0.4s;
 }
 
 .menu-items li a {
@@ -92,6 +105,7 @@ export default {
   color: #003366;
   font-weight: 500;
   font-size: 16px;
+  padding: 0 13px;
 }
 .icon-small {
   display: none; /* Hide by default */

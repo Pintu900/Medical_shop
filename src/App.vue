@@ -1,11 +1,6 @@
 <template>
   <Navbar />
-  <Timing />
-  <BodyComponent />
-  <Offerings/>
-  <Contact />
-  <Call phone-number="+91 8876499294" />
-  <Reviews />
+  <RouterView />
   <div class="hidden-seo">
   medical shop near basistha chariali guwahati , 
   medical shop near me shiv mandir ,
@@ -17,23 +12,11 @@
 </template>
 
 <script>
-import Contact from "./components/ContactUs.vue";
 import Navbar from "./components/Navbar.vue";
-import BodyComponent from "./components/Center.vue";
-import Call from "./components/Call.vue";
-import Timing from "./components/Timing.vue";
-import Reviews from "./components/Reviews.vue";
-import Offerings from "./components/Offerings.vue";
 export default {
   name: "App",
   components: {
-    Navbar,
-    BodyComponent,
-    Contact,
-    Call,
-    Timing,
-    Reviews,
-    Offerings,
+    Navbar
   },
 };
 </script>
