@@ -70,7 +70,8 @@ export default {
   padding: 20px;
   border-radius: 5px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Adding depth */
+  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); Adding depth */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
 }
 
 h2 {
@@ -144,13 +145,6 @@ p {
 
 .contact-info a:hover {
   text-decoration: underline;
-}
-
-/* Add hover effects on the services and contact cards */
-.services:hover,
-.contact-us:hover {
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.3s ease;
 }
 
 /* Desktop view: side-by-side layout */

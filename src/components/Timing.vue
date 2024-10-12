@@ -52,13 +52,13 @@ export default {
 
 <style scoped>
 .shop-status {
-  margin-top: 67px;
+  margin-top: 73px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 5px;
   font-family: Arial, sans-serif;
 }
 
