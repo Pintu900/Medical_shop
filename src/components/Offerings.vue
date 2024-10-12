@@ -9,7 +9,9 @@ export default {
 
 <template>
   <section class="offerings-section">
-    <h2>Our Offerings</h2>
+    <div class = "line">
+      <h2>Our Offerings</h2>
+    </div>
     <div class="container">
       <div class="item">
         <div class="tag">coming soon</div>
@@ -55,9 +57,12 @@ body {
 }
 
 .offerings-section {
-  padding: 40px;
+  padding: 10px;
   background-color: #f9f9f9;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h2 {
@@ -83,19 +88,22 @@ h2 {
   display: flex;
   flex-direction: column; /* Stack icon and text */
   border: 1px solid #ccc;
-  border-radius: 15px;
+  border-radius: 5px;
   background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
 }
 .tag {
   background-color: #e74c3c; /* Slightly softer red for a modern look */
-  border-top-left-radius: 15px; /* Rounded top-left corner */
-  border-top-right-radius: 15px; /* Rounded top-right corner */
+  border-top-left-radius: 5px; /* Rounded top-left corner */
+  border-top-right-radius: 5px; /* Rounded top-right corner */
   color: white; 
   font-weight: 500;
   padding: 10px 15px; 
 }
+.line{
+   width: 50%;
+  }
 
 .item i {
   font-size: 35px; /* Icon size */
@@ -126,6 +134,9 @@ h2 {
 @media (max-width: 768px) {
   .item {
     width: 45%; /* Two cards per row */
+  }
+  .line{
+   width: 100%;
   }
 }
 </style>
