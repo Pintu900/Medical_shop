@@ -34,7 +34,11 @@ export default {
   max-width: 1200px;
   width: 100%;
   flex-wrap: nowrap;
-  padding: 10px;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border-radius: 16px;
+  margin: 20px auto;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
 }
 
 .left-side {
@@ -57,18 +61,20 @@ export default {
 
 /* Style for h2 */
 .right-side h2 {
-  color: #003366; /* Deep blue color */
-  font-family: "Arial", sans-serif; /* Customize with desired font family */
-  font-weight: bold; /* Bold font style */
-  font-size: 28px; /* Adjust font size */
-  margin-bottom: 10px; /* Space between h2 and p */
+  color: #10b981;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  margin-bottom: 15px;
+  letter-spacing: -0.02em;
 }
 
 /* Optional styling for p */
 .right-side p {
-  font-family: "Verdana", sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  color: #4b5563;
 }
 
 @media (max-width: 768px) {

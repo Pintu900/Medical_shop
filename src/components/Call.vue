@@ -59,10 +59,11 @@ export default {
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: white;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
     z-index: 1000;
     padding: 10px;
-    box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px -4px 20px rgba(16, 185, 129, 0.2);
+    border-top: 2px solid #d1fae5;
   }
 
   .sk-button-group {
@@ -80,13 +81,16 @@ export default {
 
   .sk-primary-outline {
     background-color: transparent;
-    border: 2px solid #003366; /* Dark blue border */
-    color: #003366; /* Dark blue text */
+    border: 2px solid #10b981;
+    color: #10b981;
+    font-weight: 600;
   }
 
   .sk-primary {
-    background-color: #003366; /* Dark blue background */
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
   }
 
   .sk-primary:hover,

@@ -52,24 +52,27 @@ export default {
 
 <style scoped>
 .shop-status {
-  margin-top: 73px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
-  border-radius: 5px;
-  font-family: Arial, sans-serif;
+  border-radius: 12px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .open {
-  background-color: #e0f7fa;
-  color: #00796b;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 2px solid #10b981;
 }
 
 .shop-status:not(.open) {
-  background-color: #ffebee;
-  color: #c62828;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 2px solid #f59e0b;
 }
 
 .status-message h2 {

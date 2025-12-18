@@ -66,21 +66,21 @@ export default {
 
 .contact-us,
 .services {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 5px;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  padding: 30px;
+  border-radius: 12px;
   margin-bottom: 20px;
-  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); Adding depth */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.15);
+  border: 1px solid #d1fae5;
 }
 
 h2 {
-  color: #003366;
-  font-family: "Arial", sans-serif;
-  font-weight: bold;
+  color: #10b981;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
   font-size: 28px;
   margin-bottom: 15px;
-  border-bottom: 2px solid #007bff; /* Stylish underline */
+  border-bottom: 3px solid #10b981;
   padding-bottom: 10px;
 }
 
@@ -98,9 +98,14 @@ h2 {
 }
 
 .services-list li {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-size: 18px;
-  color: #555; /* Softer text color */
+  color: #1f2937;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.services-list li::marker {
+  color: #10b981;
 }
 
 /* Contact Us: Center the list, left-align the items */
@@ -126,13 +131,19 @@ h2 {
 
 .contact-info i {
   margin-right: 10px;
-  color: #007bff;
+  color: #10b981;
+  font-size: 18px;
 }
 
 .contact-info a {
-  color: #007bff;
+  color: #10b981;
   text-decoration: none;
-  font-weight: bold; /* Make links stand out */
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.contact-info a:hover {
+  color: #059669;
 }
 p {
   font-size: 22px;

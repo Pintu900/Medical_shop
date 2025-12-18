@@ -1,17 +1,17 @@
 <template>
-    <Timing />
-    <BodyComponent />
-    <Offerings/>
-    <Contact />
+    <!-- <div id="home"><Timing /></div> -->
+    <div id="about"><BodyComponent /></div>
+    <div id="services"><Offerings/></div>
+    <div id="contact"><Contact /></div>
     <Call phone-number="+91 8876499294" />
     <Reviews />
   </template>
   
   <script>
   import Contact from "./components/ContactUs.vue";
-  import BodyComponent from "./components/Center.vue";
+  import BodyComponent from "./components/Hero.vue";
   import Call from "./components/Call.vue";
-  import Timing from "./components/Timing.vue";
+  // import Timing from "./components/Timing.vue";
   import Reviews from "./components/Reviews.vue";
   import Offerings from "./components/Offerings.vue";
   export default {
@@ -19,7 +19,7 @@
       BodyComponent,
       Contact,
       Call,
-      Timing,
+      // Timing,
       Reviews,
       Offerings,
     },
@@ -33,6 +33,15 @@
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
+    margin-top: 0%;
+  }
+  
+  /* Add padding to sections to account for fixed navbar (top bar + navbar) */
+  #home,
+  #about,
+  #services,
+  #contact {
+    scroll-margin-top: 96px;
   }
   </style>
   
