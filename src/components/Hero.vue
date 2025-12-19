@@ -95,8 +95,10 @@ export default {
   },
   methods: {
     uploadPrescription() {
-      console.log("Upload prescription clicked");
-      // You can add your upload logic here
+      const prescriptionSection = document.getElementById("prescription");
+      if (prescriptionSection) {
+        prescriptionSection.scrollIntoView({ behavior: "smooth" });
+      }
     },
     browseMedicines() {
       console.log("Browse medicines clicked");

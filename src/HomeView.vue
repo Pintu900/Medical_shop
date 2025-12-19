@@ -2,6 +2,7 @@
     <!-- <div id="home"><Timing /></div> -->
     <div id="about"><BodyComponent /></div>
     <div id="services"><Offerings/></div>
+    <PrescriptionUpload />
     <div id="contact"><Contact /></div>
     <Call phone-number="+91 8876499294" />
     <Reviews />
@@ -14,6 +15,7 @@
   // import Timing from "./components/Timing.vue";
   import Reviews from "./components/Reviews.vue";
   import Offerings from "./components/Offerings.vue";
+  import PrescriptionUpload from "./components/PrescriptionUpload.vue";
   export default {
     components: {
       BodyComponent,
@@ -22,6 +24,7 @@
       // Timing,
       Reviews,
       Offerings,
+      PrescriptionUpload,
     },
   };
   </script>
@@ -40,6 +43,7 @@
   #home,
   #about,
   #services,
+  #prescription,
   #contact {
     scroll-margin-top: 96px;
   }
