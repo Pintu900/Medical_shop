@@ -1,51 +1,35 @@
 <template>
-  <div class="contact-services">
-    <div class="services">
-      <h2>Our Services</h2>
-      <div class="services-list">
-        <ul>
-          <li>Blood-pressure testing</li>
-          <li>Diabetes consultation</li>
-          <li>Medication review</li>
-          <li>Vaccinations</li>
-          <li>Blood Collection</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="contact-us">
-      <h2>Contact Us</h2>
-      <strong><p>New Shivam Medicos</p></strong>
-      <span id="addr"
-        >South Basistha Nagar, near Durga Mandir, Basistha, Guwahati,
-        Assam</span
-      >
-      <div class="contact-info">
-        <ul>
-          <li>
-            <i class="fas fa-phone-alt"></i>
-            <strong>Mobile:</strong>
-            <a href="tel:+91 8876499294">+91 8876499294</a>
-          </li>
-          <!-- <li>
-            <i class="fas fa-map-marker-alt"></i>
-            <strong>Address:</strong>
-          </li> -->
-          <li>
-            <i class="fas fa-map-marker-alt"></i>
-            <strong>Directions:</strong>
-            <a href="https://g.co/kgs/h3d5zFG" target="_blank"
-              >View on Google Maps</a
-            >
-          </li>
-          <li>
-            <i class="fas fa-envelope"></i>
-            <strong>Email:</strong>
-            <a href="mailto:contact@example.com">contact@example.com</a>
-          </li>
-        </ul>
-      </div>
-    </div>
+  <div class="grid">
+    <section class="card">
+      <h2>In-store services</h2>
+      <ul>
+        <li>Blood pressure checks</li>
+        <li>Diabetes care products &amp; guidance</li>
+        <li>Medication questions (general information)</li>
+        <li>Vaccinations &amp; blood collection (where arranged)</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2>Contact</h2>
+      <p class="shop">New Shivam Medicos</p>
+      <p class="addr">
+        South Basistha Nagar, near Durga Mandir, Basistha, Guwahati, Assam
+      </p>
+      <ul class="list">
+        <li>
+          <span class="label">Phone</span>
+          <a href="tel:+918876499294">+91 8876499294</a>
+        </li>
+        <li>
+          <span class="label">Maps</span>
+          <a href="https://g.co/kgs/h3d5zFG" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+        </li>
+        <li>
+          <span class="label">Email</span>
+          <span class="muted">Call or visit us for email.</span>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
 
@@ -56,120 +40,98 @@ export default {
 </script>
 
 <style scoped>
-/* General Layout */
-.contact-services {
-  display: flex;
-  flex-direction: column; /* Soft background */
-  padding: 40px 20px;
-  border-radius: 8px;
+.grid {
+  display: grid;
+  gap: 1rem;
 }
 
-.contact-us,
-.services {
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
-  padding: 30px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.15);
-  border: 1px solid #d1fae5;
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
 }
 
-h2 {
-  color: #10b981;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.35rem;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  font-size: 28px;
-  margin-bottom: 15px;
-  border-bottom: 3px solid #10b981;
-  padding-bottom: 10px;
+  color: var(--color-text);
 }
 
-/* Our Services: Center the list, left-align the items */
-.services-list {
-  display: flex;
-  justify-content: center;
-}
-
-.services-list ul {
-  text-align: left;
-  list-style-type: square;
-  padding: 0;
+.card ul:first-of-type {
   margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
 }
 
-.services-list li {
-  margin-bottom: 12px;
-  font-size: 18px;
-  color: #1f2937;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+.card ul:first-of-type li {
+  margin-bottom: 0.35rem;
 }
 
-.services-list li::marker {
-  color: #10b981;
+.shop {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
-/* Contact Us: Center the list, left-align the items */
-.contact-info {
-  display: flex;
-  justify-content: center;
+.addr {
+  margin: 0 0 1.25rem;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
-.contact-info ul {
-  text-align: left;
-  list-style-type: none;
-  padding: 0;
+.list {
+  list-style: none;
   margin: 0;
+  padding: 0;
 }
 
-.contact-info li {
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  color: #333; /* Softer text color */
+.list li {
+  display: grid;
+  grid-template-columns: 5rem 1fr;
+  gap: 0.5rem 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.9375rem;
+  align-items: baseline;
 }
 
-.contact-info i {
-  margin-right: 10px;
-  color: #10b981;
-  font-size: 18px;
+.list li:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
 
-.contact-info a {
-  color: #10b981;
-  text-decoration: none;
+.label {
   font-weight: 600;
-  transition: color 0.3s;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.contact-info a:hover {
-  color: #059669;
-}
-p {
-  font-size: 22px;
-  margin-bottom: 5px;
-}
-#addr {
-  display: block;
-  margin-bottom: 20px;
+.list a {
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
 }
 
-.contact-info a:hover {
+.list a:hover {
   text-decoration: underline;
 }
 
-/* Desktop view: side-by-side layout */
-@media (min-width: 768px) {
-  .contact-services {
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 40px 60px; /* Extra padding for larger screens */
-  }
-
-  .services,
-  .contact-us {
-    flex: 1;
-    max-width: 45%;
-  }
+.muted {
+  color: var(--color-muted);
 }
 </style>

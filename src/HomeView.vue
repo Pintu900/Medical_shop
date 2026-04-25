@@ -1,51 +1,62 @@
 <template>
-    <!-- <div id="home"><Timing /></div> -->
-    <div id="about"><BodyComponent /></div>
-    <div id="services"><Offerings/></div>
-    <PrescriptionUpload />
-    <div id="contact"><Contact /></div>
-    <Call phone-number="+91 8876499294" />
-    <Reviews />
-  </template>
-  
-  <script>
-  import Contact from "./components/ContactUs.vue";
-  import BodyComponent from "./components/Hero.vue";
-  import Call from "./components/Call.vue";
-  // import Timing from "./components/Timing.vue";
-  import Reviews from "./components/Reviews.vue";
-  import Offerings from "./components/Offerings.vue";
-  import PrescriptionUpload from "./components/PrescriptionUpload.vue";
-  export default {
-    components: {
-      BodyComponent,
-      Contact,
-      Call,
-      // Timing,
-      Reviews,
-      Offerings,
-      PrescriptionUpload,
-    },
-  };
-  </script>
-  
-  <style>
-  #app {
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-align: center;
-    color: #2c3e50;
-    margin-top: 0%;
-  }
-  
-  /* Add padding to sections to account for fixed navbar (top bar + navbar) */
-  #home,
-  #about,
-  #services,
-  #prescription,
-  #contact {
-    scroll-margin-top: 96px;
-  }
-  </style>
-  
+  <main class="page-main">
+    <StoreHero />
+    <StoreServices />
+    <section id="contact" class="contact-block">
+      <div class="container">
+        <header class="contact-block__head">
+          <h2>Visit or call</h2>
+          <p>Full address, map link, and phone—same details on our <RouterLink to="/contact">contact page</RouterLink>.</p>
+        </header>
+        <Contact />
+      </div>
+    </section>
+    <StoreReviews />
+    <MobileCallBar />
+  </main>
+</template>
+
+<script>
+import StoreHero from "./components/StoreHero.vue";
+import StoreServices from "./components/StoreServices.vue";
+import StoreReviews from "./components/StoreReviews.vue";
+import MobileCallBar from "./components/MobileCallBar.vue";
+import Contact from "./components/ContactUs.vue";
+
+export default {
+  name: "HomeView",
+  components: {
+    StoreHero,
+    StoreServices,
+    StoreReviews,
+    MobileCallBar,
+    Contact,
+  },
+};
+</script>
+
+<style scoped>
+.contact-block {
+  padding: var(--space-section) 0;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+.contact-block__head {
+  max-width: 36rem;
+  margin-bottom: 1.5rem;
+}
+
+.contact-block__head h2 {
+  font-size: clamp(1.5rem, 3vw, 1.75rem);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--color-text);
+}
+
+.contact-block__head p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.975rem;
+}
+</style>
