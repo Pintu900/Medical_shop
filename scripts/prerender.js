@@ -1,8 +1,10 @@
 /**
- * Post-build prerender: snapshot each route with Puppeteer (Chrome bundled with puppeteer).
- * Replaces prerender-spa-plugin (Puppeteer 1.x) which fails on Vercel / Node 20.
+ * Post-build prerender: snapshot each route with Puppeteer.
  *
- * Requires Node.js 18+ (matches Vercel default). On older Node, skips with exit 0 so `build` still passes.
+ * - **Vercel:** `@sparticuz/chromium` + `puppeteer-core` (Chrome built for serverless; avoids missing libnspr4 etc.).
+ * - **Local:** full `puppeteer` + Chrome from `npm run chromium:install` / postinstall.
+ *
+ * Requires Node.js 18+. On older Node, skips with exit 0 so `build` still passes.
  */
 if (process.env.SKIP_PRERENDER === "1") {
   console.warn("[prerender] Skipped: SKIP_PRERENDER=1");
@@ -84,6 +86,37 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+async function launchBrowser() {
+  const commonArgs = [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+  ];
+
+  if (process.env.VERCEL === "1") {
+    const chromium = require("@sparticuz/chromium");
+    const puppeteer = require("puppeteer-core");
+    const executablePath = await chromium.executablePath();
+    return puppeteer.launch({
+      args: [...chromium.args, ...commonArgs],
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: chromium.headless,
+    });
+  }
+
+  const puppeteer = require("puppeteer");
+  const launchOpts = {
+    headless: true,
+    args: commonArgs,
+  };
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    launchOpts.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+  return puppeteer.launch(launchOpts);
+}
+
 async function main() {
   if (!fs.existsSync(path.join(dist, "index.html"))) {
     console.error("[prerender] dist/index.html missing. Run vue-cli-service build first.");
@@ -96,25 +129,14 @@ async function main() {
   });
   console.log(`[prerender] static server http://127.0.0.1:${PORT}`);
 
-  const puppeteer = require("puppeteer");
-  const launchOpts = {
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-    ],
-  };
-  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-    launchOpts.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-  }
-  const browser = await puppeteer.launch(launchOpts).catch((err) => {
+  const browser = await launchBrowser().catch((err) => {
     console.error(err.message);
-    console.error(
-      "\n[prerender] Chrome not found. Run: npm run chromium:install\n" +
-        "(Puppeteer 24+ downloads the browser in a separate step; postinstall should do this after npm install.)\n"
-    );
+    if (process.env.VERCEL !== "1") {
+      console.error(
+        "\n[prerender] Chrome not found. Run: npm run chromium:install\n" +
+          "(Puppeteer 24+ downloads the browser in a separate step; postinstall should do this after npm install.)\n"
+      );
+    }
     throw err;
   });
 
