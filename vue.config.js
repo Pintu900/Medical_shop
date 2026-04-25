@@ -1,9 +1,4 @@
-const path = require("path");
-
-/**
- * HTML title (used in noscript fallback and default index).
- * Prerender runs after build via scripts/prerender.js (modern Puppeteer — works on Vercel).
- */
+/** Default document title for the HTML shell (noscript / pre-mount). */
 module.exports = {
   chainWebpack(config) {
     config.plugin("html").tap((args) => {

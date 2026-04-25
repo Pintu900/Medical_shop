@@ -3,13 +3,4 @@ import App from "./App.vue";
 import router from "./router";
 import "./assets/theme.css";
 
-const app = createApp(App);
-app.use(router);
-router.isReady().then(() => {
-  app.mount("#app");
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      document.dispatchEvent(new Event("render-event"));
-    }, 200);
-  });
-});
+createApp(App).use(router).mount("#app");
