@@ -5,7 +5,7 @@
       <p class="meta">Last updated: April 26, 2026</p>
       <p>
         This Privacy Policy explains how <strong>New Shivam Medicos</strong> (“we”, “us”, “our”) collects,
-        uses, and shares information when you visit <strong>newshivammedicos.vercel.app</strong> (the “Site”)
+        uses, and shares information when you visit <strong>www.shivammedicos.in</strong> (the “Site”)
         or contact us by phone or in person. By using the Site, you agree to this policy. If you do not
         agree, please do not use the Site.
       </p>

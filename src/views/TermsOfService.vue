@@ -5,7 +5,7 @@
       <p class="meta">Last updated: April 26, 2026</p>
       <p>
         These Terms of Service (“Terms”) govern your use of the website operated by New Shivam Medicos at
-        newshivammedicos.vercel.app (the “Site”). By using the Site, you agree to these Terms.
+        www.shivammedicos.in (the “Site”). By using the Site, you agree to these Terms.
       </p>
 
       <h2>1. Not medical advice</h2>
