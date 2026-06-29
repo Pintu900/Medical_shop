@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#14532d"/>
+      <stop offset="1" stop-color="#166534"/>
+    </linearGradient>
+    <linearGradient id="pill" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="980" cy="120" r="180" fill="#fff" opacity="0.06"/>
+  <circle cx="200" cy="520" r="140" fill="#fff" opacity="0.05"/>
+  <rect x="120" y="195" width="120" height="120" rx="26" fill="#15803d"/>
+  <path d="M180 225v60M150 255h60" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+  <rect x="162" y="243" width="36" height="24" rx="8" fill="url(#pill)"/>
+  <text x="280" y="250" fill="#bbf7d0" font-family="Poppins, Arial, sans-serif" font-size="22" font-weight="600" letter-spacing="4">NEW</text>
+  <text x="280" y="310" fill="#fff" font-family="Poppins, Arial, sans-serif" font-size="52" font-weight="700">SHIVAM MEDICOS</text>
+  <text x="280" y="360" fill="#dcfce7" font-family="Poppins, Arial, sans-serif" font-size="24" font-weight="500">Your Trusted Neighbourhood Pharmacy</text>
+  <text x="280" y="430" fill="#86efac" font-family="Poppins, Arial, sans-serif" font-size="20" font-weight="500">Basistha, Guwahati · Genuine Medicines · Expert Care</text>
+</svg>

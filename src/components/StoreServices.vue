@@ -2,21 +2,16 @@
   <section id="services" class="services">
     <div class="container">
       <header class="services__head">
-        <h2 class="services__title">What we offer</h2>
-        <p class="services__sub">
-          Everyday pharmacy services at our Basistha store. For details or stock checks, phone us before you travel.
-        </p>
+        <span class="section-eyebrow">What We Offer</span>
+        <h2 class="section-title">Our Services</h2>
       </header>
       <ul class="services__grid">
         <li v-for="item in items" :key="item.title" class="services__card">
-          <span class="services__icon" aria-hidden="true">{{ item.icon }}</span>
+          <span class="services__icon" :style="{ background: item.bg, color: item.color }" v-html="item.icon" />
           <h3>{{ item.title }}</h3>
           <p>{{ item.text }}</p>
         </li>
       </ul>
-      <p class="services__footnote">
-        We follow applicable pharmacy rules for all sales. This website does not replace medical advice from your doctor.
-      </p>
     </div>
   </section>
 </template>
@@ -28,24 +23,39 @@ export default {
     return {
       items: [
         {
-          icon: "💊",
-          title: "Prescriptions",
-          text: "Dispensing against valid prescriptions and guidance on how to take your medicines safely.",
+          title: "All Medicines",
+          text: "Prescription and OTC medicines with clear pricing and genuine sourcing.",
+          bg: "#dbeafe",
+          color: "#2563eb",
+          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="8" y="4" width="8" height="16" rx="4" fill="currentColor"/></svg>',
         },
         {
-          icon: "🩺",
-          title: "Health checks",
-          text: "Blood pressure checks and support around diabetes care products (in store, when staff are available).",
+          title: "Health Essentials",
+          text: "Vitamins, supplements, first aid, and daily wellness products.",
+          bg: "#fee2e2",
+          color: "#dc2626",
+          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10a4 4 0 017-2.5A4 4 0 0119 11c0 5.5-7 10-7 10z" fill="currentColor"/></svg>',
         },
         {
-          icon: "🧴",
-          title: "OTC & wellness",
-          text: "Over-the-counter medicines, vitamins, first aid, and daily care items for the whole family.",
+          title: "Baby Care",
+          text: "Diapers, baby food, skincare, and gentle care items for infants.",
+          bg: "#ffedd5",
+          color: "#ea580c",
+          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" fill="currentColor"/></svg>',
         },
         {
-          icon: "📍",
-          title: "Local service",
-          text: "Serving Basistha, Chariali, and nearby Guwahati neighbourhoods with clear pricing and honest advice.",
+          title: "Ayurveda & Herbal",
+          text: "Traditional herbal remedies and natural wellness products.",
+          bg: "#dcfce7",
+          color: "#16a34a",
+          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 22C12 22 5 16 5 10a7 7 0 0114 0c0 6-7 12-7 12z" fill="currentColor"/></svg>',
+        },
+        {
+          title: "Personal Care",
+          text: "Skincare, hygiene, and grooming products for the whole family.",
+          bg: "#f3e8ff",
+          color: "#9333ea",
+          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="18" rx="3" fill="currentColor"/></svg>',
         },
       ],
     };
@@ -60,22 +70,8 @@ export default {
 }
 
 .services__head {
-  max-width: 36rem;
-  margin-bottom: 2rem;
-}
-
-.services__title {
-  font-size: clamp(1.5rem, 3vw, 1.75rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0 0 0.5rem;
-  color: var(--color-text);
-}
-
-.services__sub {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 2.5rem;
 }
 
 .services__grid {
@@ -93,9 +89,9 @@ export default {
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 900px) {
   .services__grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
@@ -103,41 +99,38 @@ export default {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.35rem;
+  padding: 1.5rem 1.15rem;
   box-shadow: var(--shadow);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: center;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .services__card:hover {
-  border-color: rgba(13, 148, 136, 0.35);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-md);
 }
 
 .services__icon {
-  font-size: 1.5rem;
-  line-height: 1;
-  display: block;
-  margin-bottom: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  margin-bottom: 1rem;
 }
 
 .services__card h3 {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-text);
 }
 
 .services__card p {
   margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-muted);
-  line-height: 1.55;
-}
-
-.services__footnote {
-  margin: 2rem 0 0;
   font-size: 0.8125rem;
   color: var(--color-muted);
-  max-width: 42rem;
+  line-height: 1.55;
 }
 </style>
