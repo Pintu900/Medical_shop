@@ -2,7 +2,12 @@
   <section class="features">
     <div class="container">
       <ul class="features__grid">
-        <li v-for="item in items" :key="item.title" class="features__card">
+        <li
+          v-for="(item, i) in items"
+          :key="item.title"
+          v-reveal="{ delay: i * 90 }"
+          class="features__card"
+        >
           <span class="features__icon" v-html="item.icon" />
           <h3>{{ item.title }}</h3>
           <p>{{ item.text }}</p>
@@ -48,6 +53,8 @@ export default {
 .features {
   padding: 0 0 var(--space-section);
   margin-top: -1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .features__grid {
@@ -61,28 +68,48 @@ export default {
 
 @media (min-width: 640px) {
   .features__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 960px) {
   .features__grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 .features__card {
+  position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem 1.35rem;
+  padding: 1.6rem 1.35rem;
   box-shadow: var(--shadow);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  overflow: hidden;
+}
+
+.features__card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-green-light), var(--color-green));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .features__card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-md);
+  border-color: rgba(22, 101, 52, 0.18);
+}
+
+.features__card:hover::before {
+  transform: scaleX(1);
 }
 
 .features__icon {
@@ -94,6 +121,12 @@ export default {
   border-radius: 12px;
   background: var(--color-green-soft);
   margin-bottom: 1rem;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.features__card:hover .features__icon {
+  transform: scale(1.08) rotate(-4deg);
+  background: #d7f5e3;
 }
 
 .features__card h3 {

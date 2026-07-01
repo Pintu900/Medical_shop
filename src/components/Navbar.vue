@@ -22,8 +22,18 @@
 
       <nav id="nav-menu" class="nav__links" :class="{ 'is-open': open }">
         <RouterLink
-          v-for="l in links"
-          :key="l.to"
+          v-for="l in linksBefore"
+          :key="l.label"
+          :to="l.to"
+          class="nav__link"
+          @click="open = false"
+        >
+          {{ l.label }}
+        </RouterLink>
+        <a href="/#offers" class="nav__link" @click="onOffers">Offers</a>
+        <RouterLink
+          v-for="l in linksAfter"
+          :key="l.label"
           :to="l.to"
           class="nav__link"
           @click="open = false"
@@ -62,14 +72,13 @@ export default {
       shop: SHOP,
       open: false,
       scrolled: false,
-      links: [
+      linksBefore: [
         { to: "/", label: "Home" },
         { to: "/about", label: "About Us" },
         { to: "/services", label: "Services" },
         { to: "/about", label: "Health Tips" },
-        { to: { path: "/", hash: "#offers" }, label: "Offers" },
-        { to: "/contact", label: "Contact Us" },
       ],
+      linksAfter: [{ to: "/contact", label: "Contact Us" }],
     };
   },
   mounted() {
@@ -89,6 +98,14 @@ export default {
           const el = document.getElementById("home");
           if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
         });
+      }
+    },
+    onOffers(e) {
+      this.open = false;
+      if (this.$route.path === "/") {
+        e.preventDefault();
+        const el = document.getElementById("offers");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     },
   },
@@ -115,13 +132,15 @@ export default {
   right: 0;
   z-index: 1000;
   height: var(--nav-h);
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid transparent;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
 }
 
 .nav--scrolled {
+  background: rgba(255, 255, 255, 0.96);
   border-bottom-color: var(--color-border);
   box-shadow: var(--shadow);
 }
@@ -141,6 +160,11 @@ export default {
   text-decoration: none;
   color: inherit;
   min-width: 0;
+  transition: transform 0.2s ease;
+}
+
+.nav__brand:hover {
+  transform: scale(1.02);
 }
 
 .nav__text {
@@ -182,9 +206,14 @@ export default {
   background: transparent;
   cursor: pointer;
   border-radius: var(--radius);
+  transition: background 0.15s;
 }
 
-@media (min-width: 1024px) {
+.nav__toggle:hover {
+  background: var(--color-green-soft);
+}
+
+@media (min-width: 1180px) {
   .nav__toggle {
     display: none;
   }
@@ -236,10 +265,10 @@ export default {
 .nav__links {
   display: flex;
   align-items: center;
-  gap: 0.15rem 1.5rem;
+  gap: 0.15rem 1.1rem;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1179px) {
   .nav__links {
     position: absolute;
     top: var(--nav-h);
@@ -264,35 +293,61 @@ export default {
   font-weight: 500;
   color: var(--color-muted);
   text-decoration: none;
-  padding: 0.5rem 0.35rem;
+  white-space: nowrap;
+  padding: 0.5rem 0.15rem;
   position: relative;
-  transition: color 0.15s;
+  transition: color 0.2s;
 }
 
-.nav__link:hover,
-.nav__link.router-link-active,
-.nav__link.router-link-exact-active {
+.nav__link:hover {
   color: var(--color-green);
+}
+
+.nav__link.router-link-exact-active {
+  color: var(--color-green-dark);
+  font-weight: 600;
 }
 
 .nav__link.router-link-exact-active::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 0.15rem;
+  right: 0.15rem;
   bottom: 0;
   height: 2px;
   background: var(--color-green-light);
   border-radius: 2px;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1179px) {
   .nav__link {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 0.9rem;
+    text-align: left;
+    white-space: normal;
   }
 
   .nav__link.router-link-exact-active::after {
     display: none;
+  }
+
+  .nav__link.router-link-exact-active {
+    background: var(--color-green-soft);
+    border-radius: var(--radius);
+  }
+
+  .nav__links.is-open {
+    animation: navSlideDown 0.25s ease;
+  }
+}
+
+@keyframes navSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -304,6 +359,14 @@ export default {
   color: var(--color-green);
   text-decoration: none;
   white-space: nowrap;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.nav__phone:hover {
+  background: var(--color-green-soft);
+  transform: translateY(-1px);
 }
 
 .nav__phone svg {
@@ -325,7 +388,7 @@ export default {
   color: var(--color-muted);
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1179px) {
   .nav__phone {
     justify-content: center;
     padding: 0.85rem;
@@ -335,7 +398,7 @@ export default {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1180px) {
   .nav__inner {
     display: grid;
     grid-template-columns: auto 1fr auto;

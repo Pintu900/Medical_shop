@@ -1,12 +1,17 @@
 <template>
   <section id="services" class="services">
     <div class="container">
-      <header class="services__head">
+      <header class="services__head" v-reveal>
         <span class="section-eyebrow">What We Offer</span>
         <h2 class="section-title">Our Services</h2>
       </header>
       <ul class="services__grid">
-        <li v-for="item in items" :key="item.title" class="services__card">
+        <li
+          v-for="(item, i) in items"
+          :key="item.title"
+          v-reveal="{ delay: i * 80 }"
+          class="services__card"
+        >
           <span class="services__icon" :style="{ background: item.bg, color: item.color }" v-html="item.icon" />
           <h3>{{ item.title }}</h3>
           <p>{{ item.text }}</p>
@@ -67,6 +72,7 @@ export default {
 .services {
   padding: var(--space-section) 0;
   background: var(--color-bg);
+  position: relative;
 }
 
 .services__head {
@@ -85,13 +91,13 @@ export default {
 
 @media (min-width: 640px) {
   .services__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 900px) {
   .services__grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -99,25 +105,31 @@ export default {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem 1.15rem;
+  padding: 1.6rem 1.15rem;
   box-shadow: var(--shadow);
   text-align: center;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .services__card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px);
   box-shadow: var(--shadow-md);
+  border-color: rgba(22, 101, 52, 0.18);
 }
 
 .services__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   margin-bottom: 1rem;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.services__card:hover .services__icon {
+  transform: scale(1.1) rotate(6deg);
 }
 
 .services__card h3 {

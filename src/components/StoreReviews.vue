@@ -1,11 +1,12 @@
 <template>
   <section id="reviews" class="reviews">
     <div class="container">
-      <header class="reviews__head">
-        <h2 class="reviews__title">Customer reviews</h2>
+      <header class="reviews__head" v-reveal>
+        <span class="section-eyebrow">Testimonials</span>
+        <h2 class="section-title">Customer Reviews</h2>
         <p class="reviews__sub">Recent feedback from Google and other sources.</p>
       </header>
-      <div class="reviews__embed">
+      <div class="reviews__embed" v-reveal="{ delay: 100 }">
         <div
           class="elfsight-app-cb2f67e2-5d10-45ba-bd1d-a9be750a8ae3"
           data-elfsight-app-lazy
@@ -37,18 +38,13 @@ export default {
 }
 
 .reviews__head {
-  margin-bottom: 1.5rem;
-}
-
-.reviews__title {
-  font-size: clamp(1.5rem, 3vw, 1.75rem);
-  font-weight: 700;
-  margin: 0 0 0.35rem;
-  color: var(--color-text);
+  text-align: center;
+  max-width: 32rem;
+  margin: 0 auto 2rem;
 }
 
 .reviews__sub {
-  margin: 0;
+  margin: 0.5rem 0 0;
   font-size: 0.9375rem;
   color: var(--color-muted);
 }

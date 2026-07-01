@@ -1,12 +1,15 @@
 <template>
   <main class="page-main">
+    <section class="page-hero">
+      <div class="container page-hero__inner">
+        <h1>Services at New Shivam Medicos</h1>
+        <p>
+          An overview of what we offer at our Basistha, Guwahati store. If you are unsure whether we can
+          help with a specific request, call <a href="tel:+918876499294">+91 8876499294</a> before visiting.
+        </p>
+      </div>
+    </section>
     <article class="page-article">
-      <h1>Services at New Shivam Medicos</h1>
-      <p class="lead">
-        Below is an overview of what we offer at our Basistha, Guwahati store. If you are unsure whether we
-        can help with a specific request, call <a href="tel:+918876499294">+91 8876499294</a> before visiting.
-      </p>
-
       <h2>Prescription and medicines</h2>
       <p>
         We dispense prescriptions presented in person in accordance with applicable regulations. We stock a

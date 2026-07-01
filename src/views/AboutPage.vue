@@ -1,13 +1,16 @@
 <template>
   <main class="page-main">
+    <section class="page-hero">
+      <div class="container page-hero__inner">
+        <h1>About New Shivam Medicos</h1>
+        <p>
+          A neighbourhood retail pharmacy serving Basistha and surrounding areas of Guwahati, Assam —
+          dispensing medicines safely, stocking trusted health products, and supporting families with
+          clear, pharmacist-led guidance.
+        </p>
+      </div>
+    </section>
     <article class="page-article">
-      <h1>About New Shivam Medicos</h1>
-      <p class="lead">
-        New Shivam Medicos is a neighbourhood retail pharmacy serving Basistha and surrounding areas of
-        Guwahati, Assam. We focus on dispensing medicines safely, stocking trusted health products, and
-        supporting families with clear, pharmacist-led guidance for everyday healthcare needs.
-      </p>
-
       <h2>Who we serve</h2>
       <p>
         We welcome walk-in customers from South Basistha Nagar, Chariali, areas near Shiv Mandir, and anyone

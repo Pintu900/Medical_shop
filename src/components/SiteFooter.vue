@@ -1,5 +1,6 @@
 <template>
   <footer id="contact" class="foot">
+    <span class="foot__topbar" aria-hidden="true" />
     <div class="container foot__grid">
       <div class="foot__item">
         <span class="foot__icon" aria-hidden="true">
@@ -91,10 +92,28 @@ export default {
 
 <style scoped>
 .foot {
+  position: relative;
   margin-top: auto;
   background: var(--color-green-dark);
   color: #ecfdf5;
   font-size: 0.875rem;
+}
+
+.foot__topbar {
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-green-light), #38bdf8, var(--color-green-light));
+  background-size: 200% 100%;
+  animation: footShimmer 6s linear infinite;
+}
+
+@keyframes footShimmer {
+  0% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .foot__grid {
@@ -137,6 +156,12 @@ export default {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.foot__item:hover .foot__icon {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
 }
 
 .foot__item strong {
@@ -184,6 +209,8 @@ export default {
 .foot__whatsapp:hover {
   background: #1ebe57;
   color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.35);
 }
 
 .foot__bottom {
