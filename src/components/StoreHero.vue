@@ -67,8 +67,22 @@
         </div>
         <div class="hero__open-card">
           <div class="hero__open-head">
-            <span class="hero__open-dot" />
-            <strong>We are Open</strong>
+            <span class="hero__open-status">
+              <span class="hero__open-dot" />
+              <strong>We are Open</strong>
+            </span>
+            <span class="hero__open-location">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 21.5s7-6.2 7-11.5a7 7 0 10-14 0c0 5.3 7 11.5 7 11.5z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linejoin="round"
+                />
+                <circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="1.8" />
+              </svg>
+              Basistha
+            </span>
           </div>
           <p class="hero__open-hours">{{ shop.hoursShort }} | {{ shop.hours }}</p>
           <ul class="hero__categories">
@@ -384,6 +398,7 @@ export default {
   color: var(--color-green-dark);
   font-size: 0.75rem;
   font-weight: 700;
+  white-space: nowrap;
   padding: 0.5rem 0.9rem;
   border-radius: 999px;
   box-shadow: var(--shadow-md);
@@ -443,11 +458,20 @@ export default {
 .hero__open-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
 }
 
+.hero__open-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 .hero__open-dot {
+  flex-shrink: 0;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -458,6 +482,21 @@ export default {
 .hero__open-head strong {
   font-size: 0.9375rem;
   color: var(--color-text);
+  white-space: nowrap;
+}
+
+.hero__open-location {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-green-dark);
+  background: var(--color-green-soft);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .hero__open-hours {
@@ -485,6 +524,7 @@ export default {
   font-weight: 500;
   color: var(--color-muted);
   text-align: center;
+  white-space: nowrap;
 }
 
 .hero__cat-icon {
@@ -523,31 +563,42 @@ export default {
 }
 
 @media (max-width: 420px) {
+  .hero__badge {
+    font-size: 0.6875rem;
+    padding: 0.4rem 0.75rem;
+  }
+
   .hero__open-card {
     padding: 1rem 0.75rem;
   }
 
   .hero__categories {
-    gap: 0.25rem;
+    gap: 0.2rem;
   }
 
   .hero__cat-icon {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
   }
 
   .hero__cat-img {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 
   .hero__categories li {
-    gap: 0.3rem;
-    font-size: 0.625rem;
+    gap: 0.25rem;
+    font-size: 0.5625rem;
   }
 }
 
 @media (max-width: 360px) {
+  .hero__badge {
+    font-size: 0.625rem;
+    gap: 0.3rem;
+    padding: 0.35rem 0.65rem;
+  }
+
   .hero__cat-icon {
     width: 32px;
     height: 32px;
@@ -559,7 +610,7 @@ export default {
   }
 
   .hero__categories li {
-    font-size: 0.5625rem;
+    font-size: 0.5rem;
   }
 }
 </style>
