@@ -26,22 +26,22 @@ export default {
         {
           title: "Home Delivery",
           text: "Order medicines and essentials for convenient delivery in nearby areas.",
-          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 7h11v8H3V7zM14 10h4l3 3v2h-7v-5z" stroke="#166534" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="18" r="2" fill="#166534"/><circle cx="17" cy="18" r="2" fill="#166534"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="3" y="8" width="8.5" height="7" rx="1.3" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.5 11h3.3l3 3v2h-6.3v-5z" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="18.3" r="2.1" fill="#fff" stroke="#166534" stroke-width="1.6"/><circle cx="16.3" cy="18.3" r="2.1" fill="#fff" stroke="#166534" stroke-width="1.6"/><path d="M7.2 4.8v1.9M6.3 5.7h1.8" stroke="#166534" stroke-width="1.5" stroke-linecap="round"/></svg>',
         },
         {
           title: "Prescription Support",
           text: "Bring your prescription—we confirm availability and guide you on safe usage.",
-          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="#166534" stroke-width="1.8"/><path d="M9 8h6M9 12h4" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="17" r="4" fill="#ecfdf5" stroke="#166534" stroke-width="1.5"/><path d="M15.5 17l1 1 2-2" stroke="#166534" stroke-width="1.5" stroke-linecap="round"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="12" height="16" rx="2" fill="#bbf7d0" fill-opacity="0.55" stroke="#166534" stroke-width="1.6"/><path d="M8 7.8h6M8 11h4" stroke="#166534" stroke-width="1.6" stroke-linecap="round"/><circle cx="17" cy="17" r="4.3" fill="#fff" stroke="#166534" stroke-width="1.5"/><path d="M15.3 17.1l1.2 1.2 2.2-2.4" stroke="#166534" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         },
         {
           title: "Exciting Offers",
           text: "Seasonal discounts on wellness, personal care, and everyday essentials.",
-          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#166534" stroke-width="1.8"/><path d="M9 9c0-1.5 1-2 2-2s2 .5 2 2-1 2-2 3-2 1.5-2 3 1 2 2 2 2-.5 2-2" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.3l1.8 1.5 2.3-.6 1 2.2 2.2 1-.6 2.3 1.5 1.8-1.5 1.8.6 2.3-2.2 1-1 2.2-2.3-.6L12 18.7l-1.8 1.5-2.3-.6-1-2.2-2.2-1 .6-2.3-1.5-1.8L5.3 10l-.6-2.3 2.2-1 1-2.2 2.3.6L12 2.3z" fill="#bbf7d0" stroke="#166534" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 15l6-6" stroke="#166534" stroke-width="1.7" stroke-linecap="round"/><circle cx="9.4" cy="9.4" r="1" fill="#166534"/><circle cx="14.6" cy="14.6" r="1" fill="#166534"/></svg>',
         },
         {
           title: "Expert Advice",
           text: "Friendly pharmacist support for OTC products, vitamins, and daily care.",
-          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="9" r="3" stroke="#166534" stroke-width="1.8"/><circle cx="16" cy="9" r="3" stroke="#166534" stroke-width="1.8"/><path d="M3 20v-1a5 5 0 0110 0v1M11 20v-1a5 5 0 0110 0v1" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.1" fill="#166534"/><circle cx="16.3" cy="8.6" r="2.5" fill="#fff" stroke="#166534" stroke-width="1.6"/><path d="M4 20v-.7a5 5 0 015-5v0a5 5 0 015 5v.7" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><path d="M14.6 20v-.5a4.2 4.2 0 014.2-4.2v0" stroke="#166534" stroke-width="1.6" stroke-linecap="round"/></svg>',
         },
       ],
     };
@@ -80,10 +80,14 @@ export default {
 
 .features__card {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 1.6rem 1.35rem;
+  padding: 2rem 1.35rem 1.75rem;
   box-shadow: var(--shadow);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   overflow: hidden;
@@ -116,11 +120,11 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
   background: var(--color-green-soft);
-  margin-bottom: 1rem;
+  margin-bottom: 1.15rem;
   transition: transform 0.3s ease, background 0.3s ease;
 }
 
