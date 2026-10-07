@@ -113,7 +113,7 @@ export default {
   data() {
     return {
       shop: SHOP,
-      storeImage: "/images/storefront2.png",
+      storeImage: "/images/storefront2.jpg",
       trustItems: [
         {
           label: "Genuine Medicines",

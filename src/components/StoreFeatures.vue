@@ -26,22 +26,22 @@ export default {
         {
           title: "Home Delivery",
           text: "Order medicines and essentials for convenient delivery in nearby areas.",
-          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="3" y="8" width="8.5" height="7" rx="1.3" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.5 11h3.3l3 3v2h-6.3v-5z" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="18.3" r="2.1" fill="#fff" stroke="#166534" stroke-width="1.6"/><circle cx="16.3" cy="18.3" r="2.1" fill="#fff" stroke="#166534" stroke-width="1.6"/><path d="M7.2 4.8v1.9M6.3 5.7h1.8" stroke="#166534" stroke-width="1.5" stroke-linecap="round"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M3 6.5h10v9H3v-9z" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 10.3h3.4l3.1 3.1v2.1H13v-5.2z" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7.3" cy="18.3" r="2.1" fill="#fff" stroke="#166534" stroke-width="1.6"/><circle cx="16.8" cy="18.3" r="2.1" fill="#fff" stroke="#166534" stroke-width="1.6"/><path d="M6 9.5h4M6 12h4" stroke="#166534" stroke-width="1.4" stroke-linecap="round"/></svg>',
         },
         {
           title: "Prescription Support",
           text: "Bring your prescription—we confirm availability and guide you on safe usage.",
-          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="12" height="16" rx="2" fill="#bbf7d0" fill-opacity="0.55" stroke="#166534" stroke-width="1.6"/><path d="M8 7.8h6M8 11h4" stroke="#166534" stroke-width="1.6" stroke-linecap="round"/><circle cx="17" cy="17" r="4.3" fill="#fff" stroke="#166534" stroke-width="1.5"/><path d="M15.3 17.1l1.2 1.2 2.2-2.4" stroke="#166534" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="13" height="17" rx="2" fill="#bbf7d0" fill-opacity="0.55" stroke="#166534" stroke-width="1.6"/><path d="M8 8h7M8 11.3h5" stroke="#166534" stroke-width="1.6" stroke-linecap="round"/><circle cx="16.8" cy="17" r="4.3" fill="#fff" stroke="#166534" stroke-width="1.5"/><path d="M15 17.1l1.3 1.3 2.4-2.6" stroke="#166534" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         },
         {
           title: "Exciting Offers",
           text: "Seasonal discounts on wellness, personal care, and everyday essentials.",
-          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.3l1.8 1.5 2.3-.6 1 2.2 2.2 1-.6 2.3 1.5 1.8-1.5 1.8.6 2.3-2.2 1-1 2.2-2.3-.6L12 18.7l-1.8 1.5-2.3-.6-1-2.2-2.2-1 .6-2.3-1.5-1.8L5.3 10l-.6-2.3 2.2-1 1-2.2 2.3.6L12 2.3z" fill="#bbf7d0" stroke="#166534" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 15l6-6" stroke="#166534" stroke-width="1.7" stroke-linecap="round"/><circle cx="9.4" cy="9.4" r="1" fill="#166534"/><circle cx="14.6" cy="14.6" r="1" fill="#166534"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M11.3 3.3H18a1 1 0 011 1v6.7a1.5 1.5 0 01-.44 1.06l-7 7a1.5 1.5 0 01-2.12 0l-5.7-5.7a1.5 1.5 0 010-2.12l7-7A1.5 1.5 0 0111.3 3.3z" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><circle cx="15.5" cy="7.5" r="1.4" fill="#166534"/></svg>',
         },
         {
           title: "Expert Advice",
           text: "Friendly pharmacist support for OTC products, vitamins, and daily care.",
-          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.1" fill="#166534"/><circle cx="16.3" cy="8.6" r="2.5" fill="#fff" stroke="#166534" stroke-width="1.6"/><path d="M4 20v-.7a5 5 0 015-5v0a5 5 0 015 5v.7" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><path d="M14.6 20v-.5a4.2 4.2 0 014.2-4.2v0" stroke="#166534" stroke-width="1.6" stroke-linecap="round"/></svg>',
+          icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="8.8" cy="8" r="3.3" fill="#bbf7d0" stroke="#166534" stroke-width="1.6"/><circle cx="16.2" cy="8.8" r="2.6" fill="#fff" stroke="#166534" stroke-width="1.6"/><path d="M3.7 20v-.9a5.1 5.1 0 015.1-5.1h0a5.1 5.1 0 015.1 5.1v.9" fill="#bbf7d0" stroke="#166534" stroke-width="1.6" stroke-linejoin="round"/><path d="M14.6 20v-.6a4.2 4.2 0 014.2-4.2h0" stroke="#166534" stroke-width="1.6" stroke-linecap="round"/></svg>',
         },
       ],
     };

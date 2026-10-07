@@ -33,12 +33,12 @@ export default {
   name: "PromoBanner",
   data() {
     return {
-      promoImage: "/images/med.png",
+      promoImage: "/images/med.jpg",
     };
   },
   methods: {
     onImageError(e) {
-      e.target.src = "/images/med.png";
+      e.target.src = "/images/promo-products.svg";
     },
   },
 };

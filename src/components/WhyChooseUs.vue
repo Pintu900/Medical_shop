@@ -19,8 +19,9 @@
           :key="stat.label"
           v-reveal="{ delay: i * 90 }"
           class="why__stat"
+          :style="{ '--accent': stat.color, '--accent-soft': stat.bg }"
         >
-          <span class="why__stat-icon" v-html="stat.icon" />
+          <span class="why__stat-icon" :style="{ background: stat.bg, color: stat.color }" v-html="stat.icon" />
           <strong>{{ stat.display }}</strong>
           <span>{{ stat.label }}</span>
         </li>
@@ -44,28 +45,36 @@ export default {
           suffix: "+",
           display: "0",
           label: "Happy Customers",
-          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="#166534" stroke-width="1.8"/><circle cx="16" cy="9" r="2.5" stroke="#166534" stroke-width="1.8"/><path d="M3 19v-1a6 6 0 0112 0v1M13 19v-1a5 5 0 018 0v1" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/></svg>',
+          bg: "#dbeafe",
+          color: "#2563eb",
+          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="8.8" cy="8" r="3.3" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7"/><circle cx="16.2" cy="8.8" r="2.6" fill="#fff" stroke="currentColor" stroke-width="1.7"/><path d="M3.7 20v-.9a5.1 5.1 0 015.1-5.1h0a5.1 5.1 0 015.1 5.1v.9" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14.6 20v-.6a4.2 4.2 0 014.2-4.2h0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
         },
         {
           value: 100,
           suffix: "%",
           display: "0",
           label: "Genuine Medicines",
-          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#166534" stroke-width="1.8"/><path d="M8 12l2.5 2.5L16 9" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/></svg>',
+          bg: "#dcfce7",
+          color: "#16a34a",
+          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2.5l7.5 2.7v5.6c0 5-3.2 8.9-7.5 10.7-4.3-1.8-7.5-5.7-7.5-10.7V5.2L12 2.5z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         },
         {
           value: 15,
           suffix: "+",
           display: "0",
           label: "Years of Trust",
-          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="2" stroke="#166534" stroke-width="1.8"/><path d="M8 3v4M16 3v4M4 10h16" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/></svg>',
+          bg: "#fef3c7",
+          color: "#d97706",
+          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="15" rx="2.2" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7"/><path d="M8 3.2v3.6M16 3.2v3.6M4.2 9.6h15.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8.5 13.5l1.3 1.3 2.4-2.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         },
         {
           value: 1,
           suffix: "",
           display: "0",
           label: "Convenient Location",
-          icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21s6-5.2 6-10a6 6 0 10-12 0c0 4.8 6 10 6 10z" stroke="#166534" stroke-width="1.8"/><circle cx="12" cy="11" r="2.5" stroke="#166534" stroke-width="1.8"/></svg>',
+          bg: "#fce7f3",
+          color: "#db2777",
+          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 21.3s6.5-5.7 6.5-11A6.5 6.5 0 005.5 10.3c0 5.3 6.5 11 6.5 11z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="10.3" r="2.5" fill="#fff" stroke="currentColor" stroke-width="1.7"/></svg>',
         },
       ],
     };
@@ -139,53 +148,72 @@ export default {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.1rem;
 }
 
 .why__stat {
-  background: var(--color-bg);
+  position: relative;
+  background: linear-gradient(165deg, var(--accent-soft) 0%, var(--color-surface) 65%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 1.35rem 1.15rem;
+  padding: 1.6rem 1.35rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  gap: 0.4rem;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.why__stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--accent);
+  opacity: 0.85;
 }
 
 .why__stat:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   box-shadow: var(--shadow-md);
-  background: #fff;
+  border-color: var(--accent);
 }
 
 .why__stat-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--color-green-soft);
-  margin-bottom: 0.35rem;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  margin-bottom: 0.4rem;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .why__stat:hover .why__stat-icon {
-  transform: scale(1.1);
+  transform: scale(1.12) rotate(-4deg);
 }
 
 .why__stat strong {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-green-dark);
-  line-height: 1.2;
+  font-size: clamp(1.9rem, 2.4vw, 2.35rem);
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
 
 .why__stat span:last-child {
-  font-size: 0.8125rem;
+  font-size: 0.8438rem;
   color: var(--color-muted);
-  font-weight: 500;
+  font-weight: 600;
+}
+
+@media (min-width: 540px) and (max-width: 899px) {
+  .why__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 </style>
