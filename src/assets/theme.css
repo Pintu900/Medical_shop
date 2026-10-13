@@ -79,6 +79,10 @@ body {
   body {
     padding-bottom: 76px;
   }
+
+  body.is-admin {
+    padding-bottom: 0;
+  }
 }
 
 a {

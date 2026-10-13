@@ -5,6 +5,9 @@ import ServicesPage from "./views/ServicesPage.vue";
 import ContactPage from "./views/ContactPage.vue";
 import PrivacyPolicy from "./views/PrivacyPolicy.vue";
 import TermsOfService from "./views/TermsOfService.vue";
+import AdminLayout from "./components/admin/AdminLayout.vue";
+import AddWholesaler from "./views/admin/AddWholesaler.vue";
+import AdminSection from "./views/admin/AdminSection.vue";
 
 const routes = [
   { path: "/", name: "home", component: HomeView, meta: { title: "New Shivam Medicos — Home" } },
@@ -13,6 +16,50 @@ const routes = [
   { path: "/contact", name: "contact", component: ContactPage, meta: { title: "Contact — New Shivam Medicos" } },
   { path: "/privacy-policy", name: "privacy", component: PrivacyPolicy, meta: { title: "Privacy Policy — New Shivam Medicos" } },
   { path: "/terms-of-service", name: "terms", component: TermsOfService, meta: { title: "Terms of Service — New Shivam Medicos" } },
+  {
+    path: "/admin",
+    component: AdminLayout,
+    meta: { admin: true, title: "Admin — New Shivam Medicos" },
+    children: [
+      { path: "", redirect: "/admin/wholesalers/new" },
+      {
+        path: "overview",
+        name: "admin-overview",
+        component: AdminSection,
+        meta: { title: "Overview — New Shivam Medicos", section: "Overview" },
+      },
+      {
+        path: "wholesalers/new",
+        name: "admin-wholesaler-new",
+        component: AddWholesaler,
+        meta: { title: "Add wholesaler — New Shivam Medicos" },
+      },
+      {
+        path: "purchase-bills",
+        name: "admin-purchase-bills",
+        component: AdminSection,
+        meta: { title: "Purchase bills — New Shivam Medicos", section: "Purchase bills" },
+      },
+      {
+        path: "payments",
+        name: "admin-payments",
+        component: AdminSection,
+        meta: { title: "Payments — New Shivam Medicos", section: "Payments" },
+      },
+      {
+        path: "reports",
+        name: "admin-reports",
+        component: AdminSection,
+        meta: { title: "Reports — New Shivam Medicos", section: "Reports" },
+      },
+      {
+        path: "audit",
+        name: "admin-audit",
+        component: AdminSection,
+        meta: { title: "Audit history — New Shivam Medicos", section: "Audit history" },
+      },
+    ],
+  },
   { path: "/:pathMatch(.*)*", redirect: "/" },
 ];
 
