@@ -8,6 +8,9 @@ import TermsOfService from "./views/TermsOfService.vue";
 import AdminLayout from "./components/admin/AdminLayout.vue";
 import AddWholesaler from "./views/admin/AddWholesaler.vue";
 import AdminSection from "./views/admin/AdminSection.vue";
+import WholesalerList from "./views/admin/WholesalerList.vue";
+import WholesalerDetail from "./views/admin/WholesalerDetail.vue";
+import EditWholesaler from "./views/admin/EditWholesaler.vue";
 
 const routes = [
   { path: "/", name: "home", component: HomeView, meta: { title: "New Shivam Medicos — Home" } },
@@ -21,7 +24,7 @@ const routes = [
     component: AdminLayout,
     meta: { admin: true, title: "Admin — New Shivam Medicos" },
     children: [
-      { path: "", redirect: "/admin/wholesalers/new" },
+      { path: "", redirect: "/admin/wholesalers" },
       {
         path: "overview",
         name: "admin-overview",
@@ -29,10 +32,28 @@ const routes = [
         meta: { title: "Overview — New Shivam Medicos", section: "Overview" },
       },
       {
+        path: "wholesalers",
+        name: "admin-wholesalers",
+        component: WholesalerList,
+        meta: { title: "Wholesalers — New Shivam Medicos" },
+      },
+      {
         path: "wholesalers/new",
         name: "admin-wholesaler-new",
         component: AddWholesaler,
         meta: { title: "Add wholesaler — New Shivam Medicos" },
+      },
+      {
+        path: "wholesalers/:id",
+        name: "admin-wholesaler",
+        component: WholesalerDetail,
+        meta: { title: "Wholesaler — New Shivam Medicos" },
+      },
+      {
+        path: "wholesalers/:id/edit",
+        name: "admin-wholesaler-edit",
+        component: EditWholesaler,
+        meta: { title: "Edit wholesaler — New Shivam Medicos" },
       },
       {
         path: "purchase-bills",

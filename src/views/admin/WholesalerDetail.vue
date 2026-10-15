@@ -1,0 +1,578 @@
+<template>
+  <section class="page">
+    <p v-if="loading" class="missing">Loading wholesaler…</p>
+    <p v-else-if="loadError" class="missing">{{ loadError }}</p>
+    <p v-else-if="!item" class="missing">
+      This wholesaler was not found.
+      <RouterLink to="/admin/wholesalers">Back to wholesalers</RouterLink>
+    </p>
+
+    <template v-else>
+      <p class="crumb">
+        <RouterLink to="/admin/wholesalers">Wholesalers</RouterLink>
+        <span aria-hidden="true"> / </span>
+        {{ item.name }}
+      </p>
+
+      <p v-if="saved" class="banner" role="status">Wholesaler details saved.</p>
+      <p v-if="notice" class="banner" role="status">{{ notice }}</p>
+
+      <header class="profile">
+        <div class="profile__main">
+          <span class="avatar" aria-hidden="true">{{ initial }}</span>
+          <div>
+            <h1>{{ item.name }}</h1>
+            <p>
+              <span>{{ formatPhone(item.phone) }}</span>
+              <span>{{ item.address || "No address provided" }}</span>
+            </p>
+          </div>
+        </div>
+        <div class="profile__side">
+          <span class="status" :class="item.status === 'Active' ? 'is-active' : 'is-inactive'">
+            {{ item.status }}
+          </span>
+          <RouterLink class="btn-edit" :to="`/admin/wholesalers/${item.id}/edit`">Edit wholesaler</RouterLink>
+        </div>
+      </header>
+
+      <div class="stats">
+        <article class="stat stat--green">
+          <span>Opening Due</span>
+          <strong>{{ formatInr(item.openingDue) }}</strong>
+        </article>
+        <article class="stat stat--green">
+          <span>Total Purchases</span>
+          <strong>{{ formatInr(item.totalPurchases) }}</strong>
+        </article>
+        <article class="stat stat--blue">
+          <span>Total Payments</span>
+          <strong>{{ formatInr(item.totalPayments) }}</strong>
+        </article>
+        <article class="stat stat--amber">
+          <span>Current Due</span>
+          <strong>{{ formatInr(due) }}</strong>
+        </article>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" :aria-selected="tab === 'bills'" :class="{ 'is-on': tab === 'bills' }" @click="tab = 'bills'">
+          Bills
+        </button>
+        <button type="button" role="tab" :aria-selected="tab === 'payments'" :class="{ 'is-on': tab === 'payments' }" @click="tab = 'payments'">
+          Payments
+        </button>
+        <button type="button" role="tab" :aria-selected="tab === 'statement'" :class="{ 'is-on': tab === 'statement' }" @click="tab = 'statement'">
+          Statement
+        </button>
+      </div>
+
+      <section v-if="tab === 'bills'" class="panel">
+        <header class="panel__head">
+          <h2>Purchase Bills ({{ item.bills.length }})</h2>
+          <button type="button" class="btn-add" @click="soon('Recording a payment')">+ Record payment</button>
+        </header>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Bill Date</th>
+                <th scope="col">Bill No.</th>
+                <th scope="col">Amount (₹)</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="!item.bills.length">
+                <td colspan="5" class="empty">No purchase bills yet.</td>
+              </tr>
+              <tr v-for="(bill, index) in item.bills" :key="bill.id">
+                <td>{{ index + 1 }}</td>
+                <td>{{ bill.date }}</td>
+                <td>{{ bill.number }}</td>
+                <td>{{ formatAmount(bill.amount) }}</td>
+                <td class="row-actions">
+                  <button type="button" @click="soon('Viewing a bill photo')">View photo</button>
+                  <button type="button" @click="soon('Recording a payment')">Record payment</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="bill-cards">
+          <li v-if="!item.bills.length" class="bill-card empty">No purchase bills yet.</li>
+          <li v-for="bill in item.bills" :key="bill.id" class="bill-card">
+            <div>
+              <strong>{{ bill.number }}</strong>
+              <span>{{ bill.date }}</span>
+            </div>
+            <strong>{{ formatInr(bill.amount) }}</strong>
+            <div class="bill-card__actions">
+              <button type="button" @click="soon('Viewing a bill photo')">View photo</button>
+              <button type="button" @click="soon('Recording a payment')">Record payment</button>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section v-else-if="tab === 'payments'" class="panel">
+        <header class="panel__head">
+          <h2>Payments ({{ item.payments.length }})</h2>
+        </header>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Date</th>
+                <th scope="col">Reference</th>
+                <th scope="col">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="!item.payments.length">
+                <td colspan="4" class="empty">No payments yet.</td>
+              </tr>
+              <tr v-for="(payment, index) in item.payments" :key="payment.id">
+                <td>{{ index + 1 }}</td>
+                <td>{{ payment.date }}</td>
+                <td>{{ payment.number }}</td>
+                <td>{{ formatAmount(payment.amount) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="bill-cards">
+          <li v-if="!item.payments.length" class="bill-card empty">No payments yet.</li>
+          <li v-for="payment in item.payments" :key="payment.id" class="bill-card">
+            <div>
+              <strong>{{ payment.number }}</strong>
+              <span>{{ payment.date }}</span>
+            </div>
+            <strong>{{ formatInr(payment.amount) }}</strong>
+          </li>
+        </ul>
+      </section>
+
+      <section v-else class="panel">
+        <h2>Statement</h2>
+        <dl class="statement">
+          <div>
+            <dt>Opening due</dt>
+            <dd>{{ formatInr(item.openingDue) }}</dd>
+          </div>
+          <div>
+            <dt>Total purchases</dt>
+            <dd>{{ formatInr(item.totalPurchases) }}</dd>
+          </div>
+          <div>
+            <dt>Total payments</dt>
+            <dd>{{ formatInr(item.totalPayments) }}</dd>
+          </div>
+          <div>
+            <dt>Current due</dt>
+            <dd>{{ formatInr(due) }}</dd>
+          </div>
+        </dl>
+      </section>
+    </template>
+  </section>
+</template>
+
+<script>
+import { currentDue, fetchWholesaler, formatInr, formatPhone } from "../../data/wholesalers";
+
+export default {
+  name: "WholesalerDetail",
+  data() {
+    return {
+      item: null,
+      tab: "bills",
+      notice: "",
+      loading: false,
+      loadError: "",
+    };
+  },
+  computed: {
+    due() {
+      return this.item ? currentDue(this.item) : 0;
+    },
+    initial() {
+      return this.item && this.item.name ? this.item.name.charAt(0) : "";
+    },
+    saved() {
+      return this.$route.query.saved === "1";
+    },
+  },
+  watch: {
+    "$route.params.id": {
+      immediate: true,
+      async handler() {
+        this.tab = "bills";
+        this.notice = "";
+        this.loading = true;
+        this.loadError = "";
+        this.item = null;
+        try {
+          this.item = await fetchWholesaler(this.$route.params.id);
+        } catch (err) {
+          this.loadError = err.message || "Could not load this wholesaler.";
+        } finally {
+          this.loading = false;
+        }
+      },
+    },
+  },
+  methods: {
+    formatInr,
+    formatPhone,
+    formatAmount(amount) {
+      return new Intl.NumberFormat("en-IN").format(amount);
+    },
+    soon(action) {
+      this.notice = `${action} is not connected yet.`;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.page {
+  max-width: 1100px;
+  padding: 1.5rem 1.75rem 2.5rem;
+}
+
+.crumb {
+  margin: 0 0 1rem;
+  color: #64748b;
+  font-size: 0.8125rem;
+}
+
+.crumb a {
+  color: #0f766e;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.banner,
+.missing {
+  margin: 0 0 1rem;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.missing a {
+  display: inline-block;
+  margin-left: 0.4rem;
+}
+
+.profile {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e6eeec;
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+}
+
+.profile__main,
+.profile__side {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #e7f6f3;
+  color: #0f766e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+.profile p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.status {
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.is-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.is-inactive {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.btn-edit,
+.btn-add,
+.row-actions button,
+.bill-card button {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-edit {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  padding: 0.55rem 0.8rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.stat {
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.stat span {
+  display: block;
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.stat strong {
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+}
+
+.stat--green {
+  background: #ecfdf5;
+}
+
+.stat--blue {
+  background: #eff6ff;
+}
+
+.stat--amber {
+  background: #fff7ed;
+}
+
+.stat--amber strong {
+  color: #c2410c;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid #e6eeec;
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tabs button.is-on {
+  color: #0f766e;
+  border-bottom-color: #0f766e;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e6eeec;
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.btn-add {
+  border: 0;
+  background: #0f766e;
+  color: #fff;
+  padding: 0.6rem 0.85rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.8rem 0.7rem;
+  border-bottom: 1px solid #eef3f2;
+  font-size: 0.9rem;
+}
+
+th {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.row-actions button,
+.bill-card button {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  padding: 0.35rem 0.6rem;
+}
+
+.empty {
+  color: #64748b;
+}
+
+.bill-cards {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.7rem;
+}
+
+.bill-card {
+  border: 1px solid #e6eeec;
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.45rem 0.75rem;
+}
+
+.bill-card span,
+.bill-card .empty {
+  display: block;
+  color: #64748b;
+  font-weight: 400;
+  margin-top: 0.15rem;
+}
+
+.bill-card__actions {
+  display: flex;
+  width: 100%;
+  gap: 0.45rem;
+}
+
+.bill-card__actions button {
+  flex: 1;
+}
+
+.statement {
+  margin: 0.8rem 0 0;
+}
+
+.statement div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eef3f2;
+}
+
+.statement dt {
+  color: #64748b;
+}
+
+.statement dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+@media (max-width: 800px) {
+  .page {
+    padding: 1rem 1rem 2rem;
+  }
+
+  .profile,
+  .profile__side,
+  .panel__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile__main {
+    align-items: flex-start;
+  }
+
+  .btn-edit,
+  .btn-add {
+    text-align: center;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .table-wrap {
+    display: none;
+  }
+
+  .bill-cards {
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+  }
+}
+</style>

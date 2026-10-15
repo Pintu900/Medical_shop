@@ -1,7 +1,7 @@
 <template>
   <div class="admin">
     <header class="admin__top">
-      <RouterLink to="/admin/wholesalers/new" class="brand brand--compact">
+      <RouterLink to="/admin/wholesalers" class="brand brand--compact">
         <span class="brand__mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="16" height="16">
             <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round" />
@@ -32,7 +32,7 @@
     <div v-if="menuOpen" class="admin__backdrop" @click="menuOpen = false" />
 
     <aside id="admin-nav" class="admin__side" :class="{ 'is-open': menuOpen }">
-      <RouterLink to="/admin/wholesalers/new" class="brand">
+      <RouterLink to="/admin/wholesalers" class="brand">
         <span class="brand__mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="18" height="18">
             <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round" />
@@ -80,7 +80,7 @@ const NAV = [
   },
   {
     label: "Wholesalers",
-    to: "/admin/wholesalers/new",
+    to: "/admin/wholesalers",
     match: "/admin/wholesalers",
     icon: "M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM20 19v-1a3 3 0 0 0-2.2-2.9M16.5 6.2a3 3 0 0 1 0 5.6",
   },

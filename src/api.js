@@ -1,4 +1,9 @@
-const baseUrl = process.env.VUE_APP_API_BASE_URL || "http://localhost:8081/api/v1";
+function defaultBaseUrl() {
+  const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
+  return `http://${host}:8081/api/v1`;
+}
+
+const baseUrl = process.env.VUE_APP_API_BASE_URL || defaultBaseUrl();
 
 async function request(path, options = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -27,4 +32,8 @@ export function get(path) {
 
 export function post(path, body) {
   return request(path, { method: "POST", body: JSON.stringify(body) });
+}
+
+export function put(path, body) {
+  return request(path, { method: "PUT", body: JSON.stringify(body) });
 }
