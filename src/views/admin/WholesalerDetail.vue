@@ -36,22 +36,24 @@
         </div>
       </header>
 
+      <p v-if="reportError" class="banner" role="alert">{{ reportError }}</p>
+
       <div class="stats">
         <article class="stat stat--green">
           <span>Opening Due</span>
-          <strong>{{ formatInr(item.openingDue) }}</strong>
+          <strong>{{ formatInr(report.openingDue) }}</strong>
         </article>
         <article class="stat stat--green">
           <span>Total Purchases</span>
-          <strong>{{ formatInr(item.totalPurchases) }}</strong>
+          <strong>{{ formatInr(report.totalPurchases) }}</strong>
         </article>
         <article class="stat stat--blue">
           <span>Total Payments</span>
-          <strong>{{ formatInr(item.totalPayments) }}</strong>
+          <strong>{{ formatInr(report.totalPayments) }}</strong>
         </article>
         <article class="stat stat--amber">
           <span>Current Due</span>
-          <strong>{{ formatInr(due) }}</strong>
+          <strong>{{ formatInr(report.currentDue) }}</strong>
         </article>
       </div>
 
@@ -160,19 +162,19 @@
         <dl class="statement">
           <div>
             <dt>Opening due</dt>
-            <dd>{{ formatInr(item.openingDue) }}</dd>
+            <dd>{{ formatInr(report.openingDue) }}</dd>
           </div>
           <div>
             <dt>Total purchases</dt>
-            <dd>{{ formatInr(item.totalPurchases) }}</dd>
+            <dd>{{ formatInr(report.totalPurchases) }}</dd>
           </div>
           <div>
             <dt>Total payments</dt>
-            <dd>{{ formatInr(item.totalPayments) }}</dd>
+            <dd>{{ formatInr(report.totalPayments) }}</dd>
           </div>
           <div>
             <dt>Current due</dt>
-            <dd>{{ formatInr(due) }}</dd>
+            <dd>{{ formatInr(report.currentDue) }}</dd>
           </div>
         </dl>
       </section>
@@ -181,23 +183,29 @@
 </template>
 
 <script>
-import { currentDue, fetchWholesaler, formatInr, formatPhone } from "../../data/wholesalers";
+import { fetchWholesaler, fetchWholesalerReport, formatInr, formatPhone } from "../../data/wholesalers";
+
+const EMPTY_REPORT = () => ({
+  openingDue: 0,
+  totalPurchases: 0,
+  totalPayments: 0,
+  currentDue: 0,
+});
 
 export default {
   name: "WholesalerDetail",
   data() {
     return {
       item: null,
+      report: EMPTY_REPORT(),
       tab: "bills",
       notice: "",
       loading: false,
       loadError: "",
+      reportError: "",
     };
   },
   computed: {
-    due() {
-      return this.item ? currentDue(this.item) : 0;
-    },
     initial() {
       return this.item && this.item.name ? this.item.name.charAt(0) : "";
     },
@@ -213,9 +221,19 @@ export default {
         this.notice = "";
         this.loading = true;
         this.loadError = "";
+        this.reportError = "";
         this.item = null;
+        this.report = EMPTY_REPORT();
+        const id = this.$route.params.id;
         try {
-          this.item = await fetchWholesaler(this.$route.params.id);
+          const item = await fetchWholesaler(id);
+          this.item = item;
+          if (!item) return;
+          try {
+            this.report = await fetchWholesalerReport(id);
+          } catch (err) {
+            this.reportError = err.message || "Could not load the wholesaler totals.";
+          }
         } catch (err) {
           this.loadError = err.message || "Could not load this wholesaler.";
         } finally {

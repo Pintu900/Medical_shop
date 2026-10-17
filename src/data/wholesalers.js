@@ -21,13 +21,40 @@ export function normalizeWholesaler(raw) {
 
 export async function fetchWholesalers() {
   const data = await get("/wholesalers");
-  const list = Array.isArray(data) ? data : [];
-  return list.map(normalizeWholesaler);
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchWholesaler(id) {
-  const list = await fetchWholesalers();
-  return list.find((item) => String(item.id) === String(id)) || null;
+  const data = await get(`/wholesalers/${id}`);
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  return normalizeWholesaler(data);
+}
+
+function firstNumber(source, keys) {
+  for (let i = 0; i < keys.length; i += 1) {
+    const value = source[keys[i]];
+    if (value !== undefined && value !== null && value !== "") return Number(value) || 0;
+  }
+  return null;
+}
+
+export function normalizeWholesalerReport(raw) {
+  const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  const openingDue = firstNumber(source, ["openingDue", "opening_due"]) || 0;
+  const totalPurchases = firstNumber(source, ["totalPurchases", "total_purchases"]) || 0;
+  const totalPayments = firstNumber(source, ["totalPayments", "total_payments"]) || 0;
+  const reportedDue = firstNumber(source, ["currentDue", "current_due"]);
+  return {
+    openingDue,
+    totalPurchases,
+    totalPayments,
+    currentDue: reportedDue === null ? openingDue + totalPurchases - totalPayments : reportedDue,
+  };
+}
+
+export async function fetchWholesalerReport(id) {
+  const data = await get(`/reports/outstanding-dues/${id}`);
+  return normalizeWholesalerReport(data);
 }
 
 export function formatInr(amount) {

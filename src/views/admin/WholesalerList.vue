@@ -40,10 +40,10 @@
             <td>{{ index + 1 }}</td>
             <td class="name">{{ item.name }}</td>
             <td>{{ formatPhone(item.phone) }}</td>
-            <td class="due">{{ formatInr(currentDue(item)) }}</td>
+            <td class="due">{{ formatInr(item.currentDue) }}</td>
             <td>
-              <span class="status" :class="item.status === 'Active' ? 'is-active' : 'is-inactive'">
-                {{ item.status }}
+              <span class="status" :class="item.active ? 'is-active' : 'is-inactive'">
+                {{ item.active ? "Active" : "Inactive" }}
               </span>
             </td>
             <td>
@@ -78,12 +78,12 @@
       <li v-for="item in filtered" :key="item.id" class="card">
         <div class="card__top">
           <strong>{{ item.name }}</strong>
-          <span class="status" :class="item.status === 'Active' ? 'is-active' : 'is-inactive'">
-            {{ item.status }}
+          <span class="status" :class="item.active ? 'is-active' : 'is-inactive'">
+            {{ item.active ? "Active" : "Inactive" }}
           </span>
         </div>
         <p>{{ formatPhone(item.phone) }}</p>
-        <p class="due">Current due {{ formatInr(currentDue(item)) }}</p>
+        <p class="due">Current due {{ formatInr(item.currentDue) }}</p>
         <div class="card__actions">
           <RouterLink class="btn-view" :to="`/admin/wholesalers/${item.id}`">View</RouterLink>
           <RouterLink class="btn-edit" :to="`/admin/wholesalers/${item.id}/edit`">Edit</RouterLink>
@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import { currentDue, fetchWholesalers, formatInr, formatPhone } from "../../data/wholesalers";
+import { fetchWholesalers, formatInr, formatPhone } from "../../data/wholesalers";
 
 export default {
   name: "WholesalerList",
@@ -148,7 +148,6 @@ export default {
   methods: {
     formatInr,
     formatPhone,
-    currentDue,
     toggleMenu(id) {
       this.openMenu = this.openMenu === id ? "" : id;
     },
