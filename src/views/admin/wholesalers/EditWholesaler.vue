@@ -113,8 +113,8 @@
 </template>
 
 <script>
-import { put } from "../../api";
-import { fetchWholesaler, formatInrExact } from "../../data/wholesalers";
+import { put } from "../../../api";
+import { fetchWholesaler, formatInrExact } from "../../../data/wholesalers";
 
 const PHONE_INPUT = /^\d{0,10}/;
 const PHONE_VALUE = /^\d{10}$/;

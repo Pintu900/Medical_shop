@@ -59,9 +59,22 @@
               stroke-linejoin="round"
             />
           </svg>
-          {{ item.label }}
+          <span class="side-nav__text">
+            <span class="side-nav__label">
+              {{ item.label }}
+              <svg v-if="item.crown" class="crown" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                <path d="M4 17h16l-1.2-8-4.3 3.2L12 6l-2.5 6.2L5.2 9 4 17z" fill="currentColor" />
+              </svg>
+            </span>
+            <small v-if="item.note">{{ item.note }}</small>
+          </span>
         </RouterLink>
       </nav>
+
+      <footer class="side-foot">
+        <strong>New Shivam Medicos</strong>
+        <span>Purchase Admin</span>
+      </footer>
     </aside>
 
     <div class="admin__main">
@@ -107,6 +120,14 @@ const NAV = [
     to: "/admin/audit",
     match: "/admin/audit",
     icon: "M12 8v5l3 2M12 21a9 9 0 1 0-9-9",
+  },
+  {
+    label: "Users",
+    to: "/admin/users",
+    match: "/admin/users",
+    note: "Owner only",
+    crown: true,
+    icon: "M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
   },
 ];
 
@@ -157,6 +178,8 @@ export default {
 .admin__side {
   width: 300px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border-right: 1px solid var(--admin-line);
   padding: 1.25rem 1.25rem;
@@ -196,6 +219,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  overflow: auto;
 }
 
 .side-nav__link {
@@ -220,6 +244,51 @@ export default {
   color: var(--admin-teal);
   font-weight: 600;
   box-shadow: inset 3px 0 0 var(--admin-teal);
+}
+
+.side-nav__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.side-nav__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.side-nav__text small {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.crown {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.side-foot {
+  margin-top: auto;
+  padding: 1rem 0.8rem 0.15rem;
+  border-top: 1px solid var(--admin-line);
+}
+
+.side-foot strong,
+.side-foot span {
+  display: block;
+}
+
+.side-foot strong {
+  font-size: 0.9rem;
+}
+
+.side-foot span {
+  margin-top: 0.15rem;
+  color: var(--admin-muted);
+  font-size: 0.8rem;
 }
 
 .admin__main {

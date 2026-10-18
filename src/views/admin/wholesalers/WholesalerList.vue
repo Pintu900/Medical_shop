@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import { fetchWholesalers, formatInr, formatPhone } from "../../data/wholesalers";
+import { fetchWholesalers, formatInr, formatPhone } from "../../../data/wholesalers";
 
 export default {
   name: "WholesalerList",

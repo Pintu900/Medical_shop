@@ -138,7 +138,7 @@
 </template>
 
 <script>
-import { post } from "../../api";
+import { post } from "../../../api";
 const PHONE_INPUT = /^\d{0,10}/;
 const PHONE_VALUE = /^\d{10}$/;
 const OPENING_DUE_INPUT = /^\d*(?:\.\d{0,2})?/;

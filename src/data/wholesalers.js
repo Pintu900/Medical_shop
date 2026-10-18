@@ -57,6 +57,11 @@ export async function fetchWholesalerReport(id) {
   return normalizeWholesalerReport(data);
 }
 
+export async function fetchOutstandingDues() {
+  const data = await get("/reports/outstanding-dues");
+  return Array.isArray(data) ? data : [];
+}
+
 export function formatInr(amount) {
   const value = Number(amount) || 0;
   const whole = Number.isInteger(value);

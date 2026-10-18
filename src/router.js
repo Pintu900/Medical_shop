@@ -6,11 +6,16 @@ import ContactPage from "./views/ContactPage.vue";
 import PrivacyPolicy from "./views/PrivacyPolicy.vue";
 import TermsOfService from "./views/TermsOfService.vue";
 import AdminLayout from "./components/admin/AdminLayout.vue";
-import AddWholesaler from "./views/admin/AddWholesaler.vue";
+import AddWholesaler from "./views/admin/wholesalers/AddWholesaler.vue";
 import AdminSection from "./views/admin/AdminSection.vue";
-import WholesalerList from "./views/admin/WholesalerList.vue";
-import WholesalerDetail from "./views/admin/WholesalerDetail.vue";
-import EditWholesaler from "./views/admin/EditWholesaler.vue";
+import AdminOverview from "./views/admin/overview/Overview.vue";
+import WholesalerList from "./views/admin/wholesalers/WholesalerList.vue";
+import WholesalerDetail from "./views/admin/wholesalers/WholesalerDetail.vue";
+import EditWholesaler from "./views/admin/wholesalers/EditWholesaler.vue";
+import PurchaseBillList from "./views/admin/purchase-bills/PurchaseBillList.vue";
+import AddPurchaseBill from "./views/admin/purchase-bills/AddPurchaseBill.vue";
+import PurchaseBillDetail from "./views/admin/purchase-bills/PurchaseBillDetail.vue";
+import EditPurchaseBill from "./views/admin/purchase-bills/EditPurchaseBill.vue";
 
 const routes = [
   { path: "/", name: "home", component: HomeView, meta: { title: "New Shivam Medicos — Home" } },
@@ -24,12 +29,12 @@ const routes = [
     component: AdminLayout,
     meta: { admin: true, title: "Admin — New Shivam Medicos" },
     children: [
-      { path: "", redirect: "/admin/wholesalers" },
+      { path: "", redirect: "/admin/overview" },
       {
         path: "overview",
         name: "admin-overview",
-        component: AdminSection,
-        meta: { title: "Overview — New Shivam Medicos", section: "Overview" },
+        component: AdminOverview,
+        meta: { title: "Overview — New Shivam Medicos" },
       },
       {
         path: "wholesalers",
@@ -58,8 +63,26 @@ const routes = [
       {
         path: "purchase-bills",
         name: "admin-purchase-bills",
-        component: AdminSection,
-        meta: { title: "Purchase bills — New Shivam Medicos", section: "Purchase bills" },
+        component: PurchaseBillList,
+        meta: { title: "Purchase bills — New Shivam Medicos" },
+      },
+      {
+        path: "purchase-bills/new",
+        name: "admin-purchase-bill-new",
+        component: AddPurchaseBill,
+        meta: { title: "Add purchase bill — New Shivam Medicos" },
+      },
+      {
+        path: "purchase-bills/:id",
+        name: "admin-purchase-bill",
+        component: PurchaseBillDetail,
+        meta: { title: "Purchase bill — New Shivam Medicos" },
+      },
+      {
+        path: "purchase-bills/:id/edit",
+        name: "admin-purchase-bill-edit",
+        component: EditPurchaseBill,
+        meta: { title: "Edit purchase bill — New Shivam Medicos" },
       },
       {
         path: "payments",
@@ -78,6 +101,12 @@ const routes = [
         name: "admin-audit",
         component: AdminSection,
         meta: { title: "Audit history — New Shivam Medicos", section: "Audit history" },
+      },
+      {
+        path: "users",
+        name: "admin-users",
+        component: AdminSection,
+        meta: { title: "Users — New Shivam Medicos", section: "Users" },
       },
     ],
   },

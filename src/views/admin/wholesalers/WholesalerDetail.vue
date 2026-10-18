@@ -71,50 +71,64 @@
 
       <section v-if="tab === 'bills'" class="panel">
         <header class="panel__head">
-          <h2>Purchase Bills ({{ item.bills.length }})</h2>
+          <h2>Purchase Bills ({{ bills.length }})</h2>
           <button type="button" class="btn-add" @click="soon('Recording a payment')">+ Record payment</button>
         </header>
+        <p v-if="billsError" class="banner" role="alert">{{ billsError }}</p>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th scope="col">#</th>
-                <th scope="col">Bill Date</th>
-                <th scope="col">Bill No.</th>
+                <th scope="col">Bill date</th>
+                <th scope="col">Bill number</th>
+                <th scope="col">Wholesaler</th>
                 <th scope="col">Amount (₹)</th>
-                <th scope="col">Actions</th>
+                <th scope="col">Paid</th>
+                <th scope="col">Attachment</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="!item.bills.length">
-                <td colspan="5" class="empty">No purchase bills yet.</td>
+              <tr v-if="billsLoading">
+                <td colspan="6" class="empty">Loading purchase bills…</td>
               </tr>
-              <tr v-for="(bill, index) in item.bills" :key="bill.id">
-                <td>{{ index + 1 }}</td>
-                <td>{{ bill.date }}</td>
-                <td>{{ bill.number }}</td>
-                <td>{{ formatAmount(bill.amount) }}</td>
-                <td class="row-actions">
-                  <button type="button" @click="soon('Viewing a bill photo')">View photo</button>
-                  <button type="button" @click="soon('Recording a payment')">Record payment</button>
-                </td>
+              <tr v-else-if="!bills.length && !billsError">
+                <td colspan="6" class="empty">No purchase bills yet.</td>
               </tr>
+              <template v-else>
+                <tr v-for="bill in bills" :key="bill.id">
+                  <td>{{ formatBillDate(bill.billDate) }}</td>
+                  <td>
+                    <RouterLink class="link" :to="`/admin/purchase-bills/${bill.id}`">{{ bill.billNumber || "—" }}</RouterLink>
+                  </td>
+                  <td>{{ bill.wholesalerName || item.name }}</td>
+                  <td class="amount">{{ formatInr(bill.totalAmount) }}</td>
+                  <td>{{ formatInr(bill.paidAmount) }}</td>
+                  <td>
+                    <span class="badge" :class="attached(bill) ? 'is-ready' : 'is-pending'">
+                      {{ attached(bill) ? "Attached" : "Upload pending" }}
+                    </span>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
         <ul class="bill-cards">
-          <li v-if="!item.bills.length" class="bill-card empty">No purchase bills yet.</li>
-          <li v-for="bill in item.bills" :key="bill.id" class="bill-card">
-            <div>
-              <strong>{{ bill.number }}</strong>
-              <span>{{ bill.date }}</span>
-            </div>
-            <strong>{{ formatInr(bill.amount) }}</strong>
-            <div class="bill-card__actions">
-              <button type="button" @click="soon('Viewing a bill photo')">View photo</button>
-              <button type="button" @click="soon('Recording a payment')">Record payment</button>
-            </div>
-          </li>
+          <li v-if="billsLoading" class="bill-card empty">Loading purchase bills…</li>
+          <li v-else-if="!bills.length && !billsError" class="bill-card empty">No purchase bills yet.</li>
+          <template v-else>
+            <li v-for="bill in bills" :key="bill.id" class="bill-card bill-card--stack">
+              <div class="bill-card__top">
+                <RouterLink class="link" :to="`/admin/purchase-bills/${bill.id}`">{{ bill.billNumber || "No bill number" }}</RouterLink>
+                <span class="badge" :class="attached(bill) ? 'is-ready' : 'is-pending'">
+                  {{ attached(bill) ? "Attached" : "Upload pending" }}
+                </span>
+              </div>
+              <p>{{ bill.wholesalerName || item.name }}</p>
+              <p>{{ formatBillDate(bill.billDate) }}</p>
+              <p class="amount">{{ formatInr(bill.totalAmount) }} · Paid {{ formatInr(bill.paidAmount) }}</p>
+            </li>
+          </template>
         </ul>
       </section>
 
@@ -183,7 +197,8 @@
 </template>
 
 <script>
-import { fetchWholesaler, fetchWholesalerReport, formatInr, formatPhone } from "../../data/wholesalers";
+import { fetchWholesaler, fetchWholesalerReport, formatInr, formatPhone } from "../../../data/wholesalers";
+import { fetchWholesalerPurchaseBills, formatBillDate } from "../../../data/purchaseBills";
 
 const EMPTY_REPORT = () => ({
   openingDue: 0,
@@ -198,11 +213,14 @@ export default {
     return {
       item: null,
       report: EMPTY_REPORT(),
+      bills: [],
       tab: "bills",
       notice: "",
       loading: false,
       loadError: "",
       reportError: "",
+      billsLoading: false,
+      billsError: "",
     };
   },
   computed: {
@@ -222,21 +240,36 @@ export default {
         this.loading = true;
         this.loadError = "";
         this.reportError = "";
+        this.billsError = "";
         this.item = null;
         this.report = EMPTY_REPORT();
+        this.bills = [];
         const id = this.$route.params.id;
         try {
           const item = await fetchWholesaler(id);
           this.item = item;
           if (!item) return;
-          try {
-            this.report = await fetchWholesalerReport(id);
-          } catch (err) {
-            this.reportError = err.message || "Could not load the wholesaler totals.";
-          }
+          this.billsLoading = true;
+          await Promise.all([
+            fetchWholesalerReport(id)
+              .then((report) => {
+                this.report = report;
+              })
+              .catch((err) => {
+                this.reportError = err.message || "Could not load the wholesaler totals.";
+              }),
+            fetchWholesalerPurchaseBills(id)
+              .then((bills) => {
+                this.bills = bills;
+              })
+              .catch((err) => {
+                this.billsError = err.message || "Could not load purchase bills.";
+              }),
+          ]);
         } catch (err) {
           this.loadError = err.message || "Could not load this wholesaler.";
         } finally {
+          this.billsLoading = false;
           this.loading = false;
         }
       },
@@ -245,6 +278,10 @@ export default {
   methods: {
     formatInr,
     formatPhone,
+    formatBillDate,
+    attached(bill) {
+      return Array.isArray(bill.attachments) && bill.attachments.length > 0;
+    },
     formatAmount(amount) {
       return new Intl.NumberFormat("en-IN").format(amount);
     },
@@ -518,6 +555,58 @@ th {
   color: #64748b;
   font-weight: 400;
   margin-top: 0.15rem;
+}
+
+.bill-card--stack {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+}
+
+.bill-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bill-card--stack p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.link {
+  color: #0f766e;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.amount,
+.bill-card--stack p.amount {
+  font-weight: 700;
+}
+
+.badge,
+.bill-card span.badge {
+  display: inline-flex;
+  margin: 0;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge.is-ready,
+.bill-card span.badge.is-ready {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.is-pending,
+.bill-card span.badge.is-pending {
+  background: #fff7ed;
+  color: #c2410c;
 }
 
 .bill-card__actions {
