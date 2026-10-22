@@ -78,7 +78,7 @@
 
     <div class="actions">
       <RouterLink class="btn-add" to="/admin/purchase-bills/new">+ Add purchase bill</RouterLink>
-      <RouterLink class="btn-record" to="/admin/payments">Record payment</RouterLink>
+      <RouterLink class="btn-record" to="/admin/payments/new">Record payment</RouterLink>
     </div>
 
     <section class="summary">

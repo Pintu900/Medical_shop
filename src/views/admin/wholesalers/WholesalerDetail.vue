@@ -72,7 +72,7 @@
       <section v-if="tab === 'bills'" class="panel">
         <header class="panel__head">
           <h2>Purchase Bills ({{ bills.length }})</h2>
-          <button type="button" class="btn-add" @click="soon('Recording a payment')">+ Record payment</button>
+          <RouterLink class="btn-add" :to="`/admin/payments/new?wholesalerId=${item.id}`">+ Record payment</RouterLink>
         </header>
         <p v-if="billsError" class="banner" role="alert">{{ billsError }}</p>
         <div class="table-wrap">
@@ -134,40 +134,55 @@
 
       <section v-else-if="tab === 'payments'" class="panel">
         <header class="panel__head">
-          <h2>Payments ({{ item.payments.length }})</h2>
+          <h2>Payments ({{ payments.length }})</h2>
+          <RouterLink class="btn-add" :to="`/admin/payments/new?wholesalerId=${item.id}`">+ Record payment</RouterLink>
         </header>
+        <p v-if="paymentsError" class="banner" role="alert">{{ paymentsError }}</p>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th scope="col">#</th>
                 <th scope="col">Date</th>
-                <th scope="col">Reference</th>
                 <th scope="col">Amount (₹)</th>
+                <th scope="col">Method</th>
+                <th scope="col">Reference</th>
+                <th scope="col">Notes</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="!item.payments.length">
-                <td colspan="4" class="empty">No payments yet.</td>
+              <tr v-if="paymentsLoading">
+                <td colspan="5" class="empty">Loading payments…</td>
               </tr>
-              <tr v-for="(payment, index) in item.payments" :key="payment.id">
-                <td>{{ index + 1 }}</td>
-                <td>{{ payment.date }}</td>
-                <td>{{ payment.number }}</td>
-                <td>{{ formatAmount(payment.amount) }}</td>
+              <tr v-else-if="!payments.length && !paymentsError">
+                <td colspan="5" class="empty">No payments yet.</td>
               </tr>
+              <template v-else>
+                <tr v-for="payment in payments" :key="payment.id">
+                  <td>
+                    <RouterLink class="link" :to="`/admin/payments/${payment.id}`">{{ formatPaymentDate(payment.paymentDate) }}</RouterLink>
+                  </td>
+                  <td class="amount">{{ formatInr(payment.amount) }}</td>
+                  <td>{{ methodLabel(payment.method) }}</td>
+                  <td>{{ payment.reference || "—" }}</td>
+                  <td>{{ payment.notes || "—" }}</td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
         <ul class="bill-cards">
-          <li v-if="!item.payments.length" class="bill-card empty">No payments yet.</li>
-          <li v-for="payment in item.payments" :key="payment.id" class="bill-card">
-            <div>
-              <strong>{{ payment.number }}</strong>
-              <span>{{ payment.date }}</span>
-            </div>
-            <strong>{{ formatInr(payment.amount) }}</strong>
-          </li>
+          <li v-if="paymentsLoading" class="bill-card empty">Loading payments…</li>
+          <li v-else-if="!payments.length && !paymentsError" class="bill-card empty">No payments yet.</li>
+          <template v-else>
+            <li v-for="payment in payments" :key="payment.id" class="bill-card bill-card--stack">
+              <div class="bill-card__top">
+                <RouterLink class="link" :to="`/admin/payments/${payment.id}`">{{ formatPaymentDate(payment.paymentDate) }}</RouterLink>
+                <strong>{{ formatInr(payment.amount) }}</strong>
+              </div>
+              <p>{{ methodLabel(payment.method) }}<template v-if="payment.reference"> · {{ payment.reference }}</template></p>
+              <p v-if="payment.notes">{{ payment.notes }}</p>
+            </li>
+          </template>
         </ul>
       </section>
 
@@ -199,6 +214,7 @@
 <script>
 import { fetchWholesaler, fetchWholesalerReport, formatInr, formatPhone } from "../../../data/wholesalers";
 import { fetchWholesalerPurchaseBills, formatBillDate } from "../../../data/purchaseBills";
+import { fetchWholesalerPayments, formatPaymentDate, methodLabel } from "../../../data/payments";
 
 const EMPTY_REPORT = () => ({
   openingDue: 0,
@@ -214,6 +230,7 @@ export default {
       item: null,
       report: EMPTY_REPORT(),
       bills: [],
+      payments: [],
       tab: "bills",
       notice: "",
       loading: false,
@@ -221,6 +238,8 @@ export default {
       reportError: "",
       billsLoading: false,
       billsError: "",
+      paymentsLoading: false,
+      paymentsError: "",
     };
   },
   computed: {
@@ -241,15 +260,18 @@ export default {
         this.loadError = "";
         this.reportError = "";
         this.billsError = "";
+        this.paymentsError = "";
         this.item = null;
         this.report = EMPTY_REPORT();
         this.bills = [];
+        this.payments = [];
         const id = this.$route.params.id;
         try {
           const item = await fetchWholesaler(id);
           this.item = item;
           if (!item) return;
           this.billsLoading = true;
+          this.paymentsLoading = true;
           await Promise.all([
             fetchWholesalerReport(id)
               .then((report) => {
@@ -265,11 +287,19 @@ export default {
               .catch((err) => {
                 this.billsError = err.message || "Could not load purchase bills.";
               }),
+            fetchWholesalerPayments(id)
+              .then((payments) => {
+                this.payments = payments.sort((a, b) => String(b.paymentDate).localeCompare(String(a.paymentDate)) || (Number(b.id) || 0) - (Number(a.id) || 0));
+              })
+              .catch((err) => {
+                this.paymentsError = err.message || "Could not load payments.";
+              }),
           ]);
         } catch (err) {
           this.loadError = err.message || "Could not load this wholesaler.";
         } finally {
           this.billsLoading = false;
+          this.paymentsLoading = false;
           this.loading = false;
         }
       },
@@ -279,6 +309,8 @@ export default {
     formatInr,
     formatPhone,
     formatBillDate,
+    formatPaymentDate,
+    methodLabel,
     attached(bill) {
       return Array.isArray(bill.attachments) && bill.attachments.length > 0;
     },

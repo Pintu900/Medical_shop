@@ -1,7 +1,7 @@
 <template>
   <div class="admin">
     <header class="admin__top">
-      <RouterLink to="/admin/wholesalers" class="brand brand--compact">
+      <RouterLink to="/admin/overview" class="brand brand--compact">
         <span class="brand__mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="16" height="16">
             <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round" />
@@ -32,7 +32,7 @@
     <div v-if="menuOpen" class="admin__backdrop" @click="menuOpen = false" />
 
     <aside id="admin-nav" class="admin__side" :class="{ 'is-open': menuOpen }">
-      <RouterLink to="/admin/wholesalers" class="brand">
+      <RouterLink to="/admin/overview" class="brand">
         <span class="brand__mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="18" height="18">
             <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round" />

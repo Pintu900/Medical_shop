@@ -16,6 +16,9 @@ import PurchaseBillList from "./views/admin/purchase-bills/PurchaseBillList.vue"
 import AddPurchaseBill from "./views/admin/purchase-bills/AddPurchaseBill.vue";
 import PurchaseBillDetail from "./views/admin/purchase-bills/PurchaseBillDetail.vue";
 import EditPurchaseBill from "./views/admin/purchase-bills/EditPurchaseBill.vue";
+import PaymentList from "./views/admin/payments/PaymentList.vue";
+import RecordPayment from "./views/admin/payments/RecordPayment.vue";
+import PaymentDetail from "./views/admin/payments/PaymentDetail.vue";
 
 const routes = [
   { path: "/", name: "home", component: HomeView, meta: { title: "New Shivam Medicos — Home" } },
@@ -87,8 +90,20 @@ const routes = [
       {
         path: "payments",
         name: "admin-payments",
-        component: AdminSection,
-        meta: { title: "Payments — New Shivam Medicos", section: "Payments" },
+        component: PaymentList,
+        meta: { title: "Payments — New Shivam Medicos" },
+      },
+      {
+        path: "payments/new",
+        name: "admin-payment-new",
+        component: RecordPayment,
+        meta: { title: "Record payment — New Shivam Medicos" },
+      },
+      {
+        path: "payments/:id",
+        name: "admin-payment",
+        component: PaymentDetail,
+        meta: { title: "Payment details — New Shivam Medicos" },
       },
       {
         path: "reports",
