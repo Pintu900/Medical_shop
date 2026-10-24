@@ -43,7 +43,7 @@
 
       <nav class="side-nav" aria-label="Admin">
         <RouterLink
-          v-for="item in nav"
+          v-for="item in visibleNav"
           :key="item.to"
           :to="item.to"
           class="side-nav__link"
@@ -72,18 +72,36 @@
       </nav>
 
       <footer class="side-foot">
-        <strong>New Shivam Medicos</strong>
-        <span>Purchase Admin</span>
+        <strong>{{ accountName }}</strong>
+        <span>{{ accountDetail }}</span>
+        <button v-if="session.status === 'authenticated'" class="side-foot__out" type="button" :disabled="session.loggingOut" @click="signOut">
+          {{ session.loggingOut ? "Signing out…" : "Sign out" }}
+        </button>
+        <p v-if="logoutError" class="side-foot__error" role="alert">{{ logoutError }}</p>
       </footer>
     </aside>
 
     <div class="admin__main">
-      <RouterView />
+      <section v-if="!session.ready" class="session-problem">
+        <h1>Checking your session</h1>
+        <p>Please wait while we confirm whether you are signed in.</p>
+      </section>
+      <section v-else-if="session.status === 'unavailable'" class="session-problem">
+        <h1>Could not verify your session</h1>
+        <p>{{ session.error }}</p>
+        <div class="session-problem__actions">
+          <button class="session-problem__retry" type="button" @click="retry">Try again</button>
+          <RouterLink class="session-problem__login" to="/login">Sign in</RouterLink>
+        </div>
+      </section>
+      <RouterView v-else />
     </div>
   </div>
 </template>
 
 <script>
+import { logout, retrySession, session } from "../../auth";
+
 const NAV = [
   {
     label: "Overview",
@@ -127,6 +145,7 @@ const NAV = [
     match: "/admin/users",
     note: "Owner only",
     crown: true,
+    ownerOnly: true,
     icon: "M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
   },
 ];
@@ -137,12 +156,31 @@ export default {
     return {
       menuOpen: false,
       nav: NAV,
+      session,
+      logoutError: "",
     };
+  },
+  computed: {
+    visibleNav() {
+      const role = this.session.user && this.session.user.role;
+      if (!role) return this.nav;
+      return this.nav.filter((item) => !item.ownerOnly || role === "OWNER");
+    },
+    accountName() {
+      return (this.session.user && this.session.user.name) || "New Shivam Medicos";
+    },
+    accountDetail() {
+      if (this.session.user && this.session.user.email) return this.session.user.email;
+      if (this.session.profileMissing) return "Profile endpoint is not available";
+      return "Purchase Admin";
+    },
   },
   watch: {
     $route() {
       this.menuOpen = false;
     },
+    "session.ready": "leaveIfAnonymous",
+    "session.status": "leaveIfAnonymous",
   },
   mounted() {
     document.addEventListener("keydown", this.onKeydown);
@@ -156,6 +194,23 @@ export default {
     },
     onKeydown(event) {
       if (event.key === "Escape") this.menuOpen = false;
+    },
+    leaveIfAnonymous() {
+      if (!this.session.ready || this.session.status !== "anonymous") return;
+      if (!this.$route.matched.some((record) => record.meta.requiresAuth)) return;
+      this.$router.replace({ name: "login", query: { redirect: this.$route.fullPath } });
+    },
+    retry() {
+      retrySession();
+    },
+    async signOut() {
+      this.logoutError = "";
+      try {
+        await logout();
+        this.$router.replace("/login");
+      } catch (err) {
+        this.logoutError = err.message || "Sign out failed. Your session is still active.";
+      }
     },
   },
 };
@@ -291,9 +346,79 @@ export default {
   font-size: 0.8rem;
 }
 
+.side-foot__out {
+  margin-top: 0.7rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--admin-teal);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.side-foot__out:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.side-foot__error {
+  margin: 0.45rem 0 0;
+  color: #b42318;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .admin__main {
   flex: 1;
   min-width: 0;
+}
+
+.session-problem {
+  max-width: 36rem;
+  margin: 2rem;
+  padding: 1.4rem 1.3rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.session-problem h1 {
+  margin: 0;
+  color: var(--admin-ink);
+  font-size: 1.25rem;
+}
+
+.session-problem p {
+  margin: 0.6rem 0 0;
+  color: var(--admin-muted);
+  line-height: 1.5;
+}
+
+.session-problem__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.session-problem__retry {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  background: var(--admin-teal);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.session-problem__login {
+  color: var(--admin-teal);
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .admin__top,

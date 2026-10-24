@@ -19,6 +19,11 @@ import EditPurchaseBill from "./views/admin/purchase-bills/EditPurchaseBill.vue"
 import PaymentList from "./views/admin/payments/PaymentList.vue";
 import RecordPayment from "./views/admin/payments/RecordPayment.vue";
 import PaymentDetail from "./views/admin/payments/PaymentDetail.vue";
+import LoginPage from "./views/admin/LoginPage.vue";
+import AdminReports from "./views/admin/reports/Reports.vue";
+import AuditList from "./views/admin/audit/AuditList.vue";
+import AuditDetail from "./views/admin/audit/AuditDetail.vue";
+import { initAuth, safeInternalPath, session } from "./auth";
 
 const routes = [
   { path: "/", name: "home", component: HomeView, meta: { title: "New Shivam Medicos — Home" } },
@@ -28,9 +33,15 @@ const routes = [
   { path: "/privacy-policy", name: "privacy", component: PrivacyPolicy, meta: { title: "Privacy Policy — New Shivam Medicos" } },
   { path: "/terms-of-service", name: "terms", component: TermsOfService, meta: { title: "Terms of Service — New Shivam Medicos" } },
   {
+    path: "/login",
+    name: "login",
+    component: LoginPage,
+    meta: { admin: true, guestOnly: true, title: "Sign in — New Shivam Medicos" },
+  },
+  {
     path: "/admin",
     component: AdminLayout,
-    meta: { admin: true, title: "Admin — New Shivam Medicos" },
+    meta: { admin: true, requiresAuth: true, title: "Admin — New Shivam Medicos" },
     children: [
       { path: "", redirect: "/admin/overview" },
       {
@@ -108,14 +119,20 @@ const routes = [
       {
         path: "reports",
         name: "admin-reports",
-        component: AdminSection,
-        meta: { title: "Reports — New Shivam Medicos", section: "Reports" },
+        component: AdminReports,
+        meta: { title: "Reports — New Shivam Medicos" },
       },
       {
         path: "audit",
         name: "admin-audit",
-        component: AdminSection,
-        meta: { title: "Audit history — New Shivam Medicos", section: "Audit history" },
+        component: AuditList,
+        meta: { title: "Audit history — New Shivam Medicos" },
+      },
+      {
+        path: "audit/:id",
+        name: "admin-audit-event",
+        component: AuditDetail,
+        meta: { title: "Audit event — New Shivam Medicos" },
       },
       {
         path: "users",
@@ -136,6 +153,21 @@ const router = createRouter({
     if (to.hash) return { el: to.hash, behavior: "smooth", top: 80 };
     return { top: 0, left: 0 };
   },
+});
+
+router.beforeEach((to) => {
+  const needsAuth = to.matched.some((record) => record.meta.requiresAuth);
+  const guestOnly = to.matched.some((record) => record.meta.guestOnly);
+  if (!needsAuth && !guestOnly) return true;
+  if (!session.ready) {
+    initAuth();
+    return true;
+  }
+  if (needsAuth && session.status === "anonymous") {
+    return { name: "login", query: { redirect: to.fullPath } };
+  }
+  if (guestOnly && session.status === "authenticated") return safeInternalPath(to.query.redirect);
+  return true;
 });
 
 router.afterEach((to) => {
