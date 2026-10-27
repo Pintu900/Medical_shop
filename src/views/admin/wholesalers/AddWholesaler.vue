@@ -126,6 +126,7 @@
 
       <div class="actions">
         <p v-if="success" class="banner" role="status">{{ success }}</p>
+        <p v-if="submitError" class="banner banner--error" role="alert">{{ submitError }}</p>
         <div class="actions__row">
           <button class="btn-save" type="submit" :disabled="submitting">
             {{ submitting ? "Saving…" : "Create wholesaler" }}
@@ -159,12 +160,14 @@ export default {
       form: EMPTY_FORM(),
       fieldErrors: {},
       success: "",
+      submitError: "",
       submitting: false,
     };
   },
   methods: {
     clearStatus() {
       this.success = "";
+      this.submitError = "";
     },
     onPhone(event) {
       const cleaned = event.target.value.replace(/\D/g, "");
@@ -216,15 +219,19 @@ export default {
     },
     async onSubmit() {
       this.success = "";
+      this.submitError = "";
       this.formatDue();
       if (!this.validate()) return;
       this.submitting = true;
       try {
-        const body = this.payload();
-        // Replace this with your API call, for example:
-        await post("/wholesalers", body);
-        await Promise.resolve(body);
-        this.success = "Details captured. Saving to the server is not connected yet.";
+        const created = await post("/wholesalers", this.payload());
+        if (!created || created.id == null) {
+          this.submitError = "The wholesaler was saved, but its page could not be opened.";
+          return;
+        }
+        await this.$router.push(`/admin/wholesalers/${created.id}`);
+      } catch (err) {
+        this.submitError = err.message || "Could not save this wholesaler.";
       } finally {
         this.submitting = false;
       }
@@ -233,6 +240,7 @@ export default {
       this.form = EMPTY_FORM();
       this.fieldErrors = {};
       this.success = "";
+      this.submitError = "";
     },
   },
 };
@@ -476,6 +484,10 @@ h2 {
   color: #0f766e;
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+.banner--error {
+  color: #b42318;
 }
 
 .actions__row {

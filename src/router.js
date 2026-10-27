@@ -7,7 +7,6 @@ import PrivacyPolicy from "./views/PrivacyPolicy.vue";
 import TermsOfService from "./views/TermsOfService.vue";
 import AdminLayout from "./components/admin/AdminLayout.vue";
 import AddWholesaler from "./views/admin/wholesalers/AddWholesaler.vue";
-import AdminSection from "./views/admin/AdminSection.vue";
 import AdminOverview from "./views/admin/overview/Overview.vue";
 import WholesalerList from "./views/admin/wholesalers/WholesalerList.vue";
 import WholesalerDetail from "./views/admin/wholesalers/WholesalerDetail.vue";
@@ -23,6 +22,7 @@ import LoginPage from "./views/admin/LoginPage.vue";
 import AdminReports from "./views/admin/reports/Reports.vue";
 import AuditList from "./views/admin/audit/AuditList.vue";
 import AuditDetail from "./views/admin/audit/AuditDetail.vue";
+import UserList from "./views/admin/users/UserList.vue";
 import { initAuth, safeInternalPath, session } from "./auth";
 
 const routes = [
@@ -137,8 +137,8 @@ const routes = [
       {
         path: "users",
         name: "admin-users",
-        component: AdminSection,
-        meta: { title: "Users — New Shivam Medicos", section: "Users" },
+        component: UserList,
+        meta: { title: "Users — New Shivam Medicos" },
       },
     ],
   },

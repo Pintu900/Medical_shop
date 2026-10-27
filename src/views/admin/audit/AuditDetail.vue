@@ -1,6 +1,8 @@
 <template>
   <section class="page">
-    <p v-if="!event" class="missing">
+    <p v-if="loading" class="missing">Loading audit event…</p>
+    <p v-else-if="loadError" class="missing">{{ loadError }}</p>
+    <p v-else-if="!event" class="missing">
       This audit event was not found.
       <RouterLink to="/admin/audit">Back to audit history</RouterLink>
     </p>
@@ -17,27 +19,27 @@
         <dl class="details">
           <div>
             <dt>Date &amp; time</dt>
-            <dd>{{ formatAuditWhen(event.at) }}</dd>
+            <dd>{{ formatAuditWhen(event.occurredAt) }}</dd>
           </div>
           <div>
             <dt>User</dt>
-            <dd>{{ event.user }}</dd>
+            <dd>{{ auditUser(event) }}</dd>
           </div>
           <div>
             <dt>Action</dt>
-            <dd>{{ event.action }}</dd>
+            <dd>{{ actionLabel(event.action) }}</dd>
           </div>
           <div>
             <dt>Entity</dt>
-            <dd>{{ event.entity }}</dd>
+            <dd>{{ entityLabel(event.entityType) }}</dd>
           </div>
           <div>
             <dt>Record ID</dt>
-            <dd>#{{ event.recordId }}</dd>
+            <dd>#{{ event.entityId }}</dd>
           </div>
           <div>
             <dt>Reason</dt>
-            <dd>{{ event.reason }}</dd>
+            <dd>{{ event.reason || "—" }}</dd>
           </div>
         </dl>
       </article>
@@ -54,11 +56,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="!event.changes.length">
+              <tr v-if="!changes.length">
                 <td colspan="3" class="empty">No field changes were recorded.</td>
               </tr>
               <template v-else>
-                <tr v-for="change in event.changes" :key="change.field">
+                <tr v-for="change in changes" :key="change.field">
                   <td>{{ change.field }}</td>
                   <td>{{ change.before }}</td>
                   <td class="after">{{ change.after }}</td>
@@ -75,25 +77,55 @@
 </template>
 
 <script>
-import { formatAuditWhen, getAuditEvent } from "../../../data/audit";
+import {
+  actionLabel,
+  auditChanges,
+  auditUser,
+  entityLabel,
+  fetchAuditEvent,
+  formatAuditWhen,
+} from "../../../data/audit";
 
 export default {
   name: "AuditDetail",
   data() {
     return {
       event: null,
+      loading: false,
+      loadError: "",
     };
+  },
+  computed: {
+    changes() {
+      return this.event ? auditChanges(this.event) : [];
+    },
   },
   watch: {
     "$route.params.id": {
       immediate: true,
       handler(id) {
-        this.event = getAuditEvent(id);
+        this.load(id);
       },
     },
   },
   methods: {
     formatAuditWhen,
+    auditUser,
+    actionLabel,
+    entityLabel,
+    async load(id) {
+      this.loading = true;
+      this.loadError = "";
+      this.event = null;
+      try {
+        this.event = await fetchAuditEvent(id);
+      } catch (err) {
+        if (err.status === 404) this.event = null;
+        else this.loadError = err.message || "Could not load this audit event.";
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 };
 </script>

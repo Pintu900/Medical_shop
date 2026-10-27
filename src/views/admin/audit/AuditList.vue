@@ -11,33 +11,35 @@
     </header>
 
     <div class="tools">
-      <label class="search">
-        <span class="sr-only">Search audit history</span>
-        <input v-model.trim="query" type="search" placeholder="Search by user, action, record ID or reason" />
-      </label>
       <label>
         <span class="sr-only">Entity</span>
-        <select v-model="entity">
+        <select v-model="entity" @change="reload">
           <option value="">All entities</option>
-          <option v-for="item in entities" :key="item" :value="item">{{ item }}</option>
+          <option v-for="item in entities" :key="item.value" :value="item.value">{{ item.label }}</option>
         </select>
       </label>
       <label>
         <span class="sr-only">Action</span>
-        <select v-model="action">
+        <select v-model="action" @change="reload">
           <option value="">All actions</option>
-          <option v-for="item in actions" :key="item" :value="item">{{ item }}</option>
+          <option v-for="item in actions" :key="item.value" :value="item.value">{{ item.label }}</option>
         </select>
       </label>
       <label>
         <span class="sr-only">Time</span>
-        <select v-model="period">
+        <select v-model="period" @change="reload">
           <option value="all">All time</option>
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
         </select>
       </label>
+      <label class="search">
+        <span class="sr-only">Record ID</span>
+        <input v-model.trim="recordId" inputmode="numeric" placeholder="Record ID" @change="reload" />
+      </label>
     </div>
+
+    <p v-if="error" class="load-error" role="alert">{{ error }}</p>
 
     <div class="table-wrap">
       <table>
@@ -53,17 +55,20 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="!filtered.length">
+          <tr v-if="loading">
+            <td colspan="7" class="empty">Loading audit history…</td>
+          </tr>
+          <tr v-else-if="!events.length && !error">
             <td colspan="7" class="empty">No audit events match these filters.</td>
           </tr>
           <template v-else>
-            <tr v-for="event in filtered" :key="event.id">
-              <td>{{ formatAuditWhen(event.at) }}</td>
-              <td>{{ event.user }}</td>
-              <td>{{ event.action }}</td>
-              <td>{{ event.entity }}</td>
-              <td>#{{ event.recordId }}</td>
-              <td>{{ event.reason }}</td>
+            <tr v-for="event in events" :key="event.id">
+              <td>{{ formatAuditWhen(event.occurredAt) }}</td>
+              <td>{{ auditUser(event) }}</td>
+              <td>{{ actionLabel(event.action) }}</td>
+              <td>{{ entityLabel(event.entityType) }}</td>
+              <td>#{{ event.entityId }}</td>
+              <td>{{ event.reason || "—" }}</td>
               <td>
                 <RouterLink class="btn-view" :to="`/admin/audit/${event.id}`">View</RouterLink>
               </td>
@@ -74,65 +79,124 @@
     </div>
 
     <ul class="cards">
-      <li v-if="!filtered.length" class="card empty">No audit events match these filters.</li>
+      <li v-if="loading" class="card empty">Loading audit history…</li>
+      <li v-else-if="!events.length && !error" class="card empty">No audit events match these filters.</li>
       <template v-else>
-        <li v-for="event in filtered" :key="event.id" class="card">
+        <li v-for="event in events" :key="event.id" class="card">
           <div class="card__top">
-            <strong>{{ event.user }}</strong>
+            <strong>{{ auditUser(event) }}</strong>
             <RouterLink class="btn-view" :to="`/admin/audit/${event.id}`">View</RouterLink>
           </div>
-          <p>{{ formatAuditWhen(event.at) }}</p>
-          <p>{{ event.action }} · {{ event.entity }} #{{ event.recordId }}</p>
-          <p>{{ event.reason }}</p>
+          <p>{{ formatAuditWhen(event.occurredAt) }}</p>
+          <p>{{ actionLabel(event.action) }} · {{ entityLabel(event.entityType) }} #{{ event.entityId }}</p>
+          <p>{{ event.reason || "—" }}</p>
         </li>
       </template>
     </ul>
+
+    <footer v-if="!loading && totalElements" class="pager">
+      <p>{{ rangeLabel }}</p>
+      <div>
+        <button type="button" :disabled="page === 0" @click="go(page - 1)">‹</button>
+        <span>Page {{ page + 1 }} of {{ totalPages || 1 }}</span>
+        <button type="button" :disabled="page + 1 >= totalPages" @click="go(page + 1)">›</button>
+      </div>
+    </footer>
   </section>
 </template>
 
 <script>
-import { AUDIT_ACTIONS, AUDIT_ENTITIES, formatAuditWhen, listAuditEvents } from "../../../data/audit";
+import {
+  AUDIT_ACTIONS,
+  AUDIT_ENTITIES,
+  actionLabel,
+  auditDateRange,
+  auditUser,
+  entityLabel,
+  fetchAuditEvents,
+  formatAuditWhen,
+} from "../../../data/audit";
+
+const PAGE_SIZE = 20;
 
 export default {
   name: "AuditList",
   data() {
     return {
-      events: listAuditEvents(),
+      events: [],
       entities: AUDIT_ENTITIES,
       actions: AUDIT_ACTIONS,
-      query: "",
       entity: "",
       action: "",
       period: "all",
+      recordId: "",
+      page: 0,
+      size: PAGE_SIZE,
+      totalElements: 0,
+      totalPages: 0,
+      loading: false,
+      error: "",
     };
   },
   computed: {
-    filtered() {
-      const query = this.query.toLowerCase();
-      const start = this.periodStart();
-      return this.events
-        .filter((event) => {
-          if (this.entity && event.entity !== this.entity) return false;
-          if (this.action && event.action !== this.action) return false;
-          if (start && new Date(event.at) < start) return false;
-          if (!query) return true;
-          const haystack = [event.user, event.action, event.entity, event.recordId, event.reason, event.id]
-            .join(" ")
-            .toLowerCase();
-          return haystack.includes(query);
-        })
-        .sort((a, b) => new Date(b.at) - new Date(a.at));
+    rangeLabel() {
+      if (!this.totalElements) return "0 events";
+      const start = this.page * this.size + 1;
+      const end = start + this.events.length - 1;
+      return `${start}–${end} of ${this.totalElements}`;
     },
+  },
+  created() {
+    this.load();
   },
   methods: {
     formatAuditWhen,
-    periodStart() {
-      if (this.period === "all") return null;
-      const days = this.period === "7" ? 7 : 30;
-      const start = new Date();
-      start.setDate(start.getDate() - days);
-      start.setHours(0, 0, 0, 0);
-      return start;
+    auditUser,
+    actionLabel,
+    entityLabel,
+    reload() {
+      this.page = 0;
+      this.load();
+    },
+    go(page) {
+      this.page = page;
+      this.load();
+    },
+    async load() {
+      if (this.recordId && !this.entity) {
+        this.error = "Choose an entity before filtering by record ID.";
+        return;
+      }
+      if (this.recordId && !/^[1-9]\d*$/.test(this.recordId)) {
+        this.error = "Record ID must be a positive number.";
+        return;
+      }
+      this.loading = true;
+      this.error = "";
+      const dates = auditDateRange(this.period);
+      try {
+        const data = await fetchAuditEvents({
+          entityType: this.entity,
+          entityId: this.recordId,
+          action: this.action,
+          fromDate: dates.fromDate,
+          toDate: dates.toDate,
+          page: this.page,
+          size: PAGE_SIZE,
+        });
+        this.events = data.items;
+        this.page = data.page;
+        this.size = data.size;
+        this.totalElements = data.totalElements;
+        this.totalPages = data.totalPages;
+      } catch (err) {
+        this.events = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.error = err.message || "Could not load audit history.";
+      } finally {
+        this.loading = false;
+      }
     },
   },
 };
@@ -181,6 +245,12 @@ h1 {
 
 .search {
   flex: 1 1 16rem;
+}
+
+.load-error {
+  margin: 0.8rem 0 0;
+  color: #b91c1c;
+  font-weight: 600;
 }
 
 .search input,
@@ -261,6 +331,44 @@ th {
   color: #0f172a;
 }
 
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.pager p,
+.pager span {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.pager div {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pager button {
+  min-width: 2rem;
+  height: 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pager button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -282,12 +390,14 @@ th {
     flex-wrap: wrap;
   }
 
-  .tools {
+  .tools,
+  .pager {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
 
-  .search {
+  .search,
+  .pager {
     grid-column: 1 / -1;
   }
 
