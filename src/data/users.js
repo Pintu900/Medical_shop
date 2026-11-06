@@ -1,10 +1,4 @@
-const users = [
-  { id: 1, name: "Pintu Sah", email: "pintu@example.com", role: "OWNER", active: true },
-  { id: 2, name: "Rahul Kumar", email: "rahul@example.com", role: "STAFF", active: true },
-  { id: 3, name: "Neha Singh", email: "neha@example.com", role: "VIEWER", active: false },
-];
-
-let nextId = 4;
+import { get, patch, post, put } from "../api";
 
 export const USER_ROLES = [
   { value: "OWNER", label: "Owner" },
@@ -17,28 +11,37 @@ export function roleLabel(value) {
   return found ? found.label : value || "—";
 }
 
-export function listUsers() {
-  return users.map((user) => ({ ...user }));
+export async function fetchUsers(page, size) {
+  const data = await get(`/users?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`);
+  const body = data && typeof data === "object" ? data : {};
+  return {
+    items: Array.isArray(body.items) ? body.items : [],
+    page: Number(body.page) || 0,
+    size: Number(body.size) || size,
+    totalElements: Number(body.totalElements) || 0,
+    totalPages: Number(body.totalPages) || 0,
+  };
 }
 
 export function createUser(input) {
-  const user = {
-    id: nextId,
+  return post("/users", {
     name: input.name,
     email: input.email,
+    password: input.password,
     role: input.role,
-    active: true,
-  };
-  nextId += 1;
-  users.push(user);
-  return { ...user };
+  });
 }
 
 export function updateUser(id, input) {
-  const user = users.find((item) => item.id === id);
-  if (!user) return null;
-  user.name = input.name;
-  user.role = input.role;
-  if (typeof input.active === "boolean") user.active = input.active;
-  return { ...user };
+  const body = {
+    name: input.name,
+    role: input.role,
+    reason: input.reason,
+  };
+  if (input.password) body.password = input.password;
+  return put(`/users/${encodeURIComponent(id)}`, body);
+}
+
+export function updateUserStatus(id, active, reason) {
+  return patch(`/users/${encodeURIComponent(id)}/status`, { active, reason });
 }

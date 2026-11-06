@@ -1,7 +1,19 @@
 import { get } from "../api";
 
-export async function fetchPurchaseBills() {
-  const data = await get("/purchase-bills");
+export async function fetchPurchaseBills(filters) {
+  const search = new URLSearchParams();
+  const source = filters && typeof filters === "object" ? filters : {};
+  if (source.wholesalerId !== undefined && source.wholesalerId !== null && source.wholesalerId !== "") {
+    search.set("wholesalerId", String(source.wholesalerId));
+  }
+  const hasMonth = source.month !== undefined && source.month !== null && source.month !== "";
+  const hasYear = source.year !== undefined && source.year !== null && source.year !== "";
+  if (hasMonth && hasYear) {
+    search.set("month", String(source.month));
+    search.set("year", String(source.year));
+  }
+  const query = search.toString();
+  const data = await get(query ? `/purchase-bills?${query}` : "/purchase-bills");
   return Array.isArray(data) ? data : [];
 }
 
@@ -12,8 +24,8 @@ export async function fetchPurchaseBill(id) {
 }
 
 export async function fetchWholesalerPurchaseBills(wholesalerId) {
-  const data = await get(`/purchase-bills?wholesalerId=${encodeURIComponent(wholesalerId)}`);
-  return Array.isArray(data) ? data : [];
+  const data = await fetchPurchaseBills({ wholesalerId });
+  return data.filter((row) => String(row.wholesalerId) === String(wholesalerId));
 }
 
 const bills = [

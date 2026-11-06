@@ -34,8 +34,6 @@
 
     <p v-if="loading" class="status">Loading report…</p>
     <p v-if="error" class="status status--error" role="alert">{{ error }}</p>
-    <p v-if="billsError" class="status status--error" role="alert">{{ billsError }}</p>
-    <p v-if="paymentsError" class="status status--error" role="alert">{{ paymentsError }}</p>
 
     <div class="stats">
       <article class="stat stat--opening">
@@ -175,14 +173,13 @@
       </ul>
     </section>
 
-    <p class="note">Outstanding balance is the current due. Purchases and payments are for {{ periodLabel }}. Opening balance is the recorded opening due.</p>
+    <p class="note">Opening balance is the balance at the start of {{ periodLabel }}. Purchases and payments are for that month. Outstanding balance is the closing balance for the month.</p>
   </section>
 </template>
 
 <script>
-import { fetchOutstandingDues, formatInr } from "../../../data/wholesalers";
-import { fetchPurchaseBills } from "../../../data/purchaseBills";
-import { fetchPayments } from "../../../data/payments";
+import { fetchWholesalerSummaries } from "../../../data/reports";
+import { formatInr } from "../../../data/wholesalers";
 
 const MONTHS = [
   { value: 1, label: "January" },
@@ -199,16 +196,6 @@ const MONTHS = [
   { value: 12, label: "December" },
 ];
 
-function parseDate(value) {
-  const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function inMonth(value, year, month) {
-  const date = parseDate(value);
-  return Boolean(date) && date.getFullYear() === year && date.getMonth() + 1 === month;
-}
-
 export default {
   name: "AdminReports",
   data() {
@@ -219,18 +206,14 @@ export default {
       years: [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4],
       draft: { ...initial },
       applied: { ...initial },
-      dues: [],
-      bills: [],
-      payments: [],
+      summaries: [],
       loading: false,
       error: "",
-      billsError: "",
-      paymentsError: "",
     };
   },
   computed: {
     wholesalerOptions() {
-      return [...this.dues].sort((a, b) => String(a.wholesalerName || "").localeCompare(String(b.wholesalerName || "")));
+      return [...this.summaries].sort((a, b) => String(a.wholesalerName || "").localeCompare(String(b.wholesalerName || "")));
     },
     periodLabel() {
       const month = MONTHS.find((item) => item.value === this.applied.month);
@@ -240,27 +223,14 @@ export default {
       const selected = this.applied.wholesalerId;
       return this.wholesalerOptions
         .filter((item) => !selected || String(item.wholesalerId) === String(selected))
-        .map((item) => {
-          const id = String(item.wholesalerId);
-          const purchases = this.bills.reduce((sum, bill) => {
-            if (String(bill.wholesalerId) !== id) return sum;
-            if (!inMonth(bill.billDate, this.applied.year, this.applied.month)) return sum;
-            return sum + (Number(bill.totalAmount) || 0);
-          }, 0);
-          const payments = this.payments.reduce((sum, payment) => {
-            if (String(payment.wholesalerId) !== id) return sum;
-            if (!inMonth(payment.paymentDate, this.applied.year, this.applied.month)) return sum;
-            return sum + (Number(payment.amount) || 0);
-          }, 0);
-          return {
-            wholesalerId: item.wholesalerId,
-            wholesalerName: item.wholesalerName || "Wholesaler",
-            openingDue: Number(item.openingDue) || 0,
-            purchases,
-            payments,
-            outstanding: Number(item.currentDue) || 0,
-          };
-        });
+        .map((item) => ({
+          wholesalerId: item.wholesalerId,
+          wholesalerName: item.wholesalerName || "Wholesaler",
+          openingDue: Number(item.openingBalance) || 0,
+          purchases: Number(item.totalPurchases) || 0,
+          payments: Number(item.totalPayments) || 0,
+          outstanding: Number(item.closingBalance) || 0,
+        }));
     },
     totals() {
       return this.rows.reduce((sum, item) => ({
@@ -271,29 +241,30 @@ export default {
       }), { opening: 0, purchases: 0, payments: 0, outstanding: 0 });
     },
   },
-  async created() {
-    this.loading = true;
-    const [dues, bills, payments] = await Promise.allSettled([
-      fetchOutstandingDues(),
-      fetchPurchaseBills(),
-      fetchPayments(),
-    ]);
-    if (dues.status === "fulfilled") this.dues = dues.value;
-    else this.error = (dues.reason && dues.reason.message) || "Could not load the outstanding balances.";
-    if (bills.status === "fulfilled") this.bills = bills.value;
-    else this.billsError = (bills.reason && bills.reason.message) || "Could not load purchases for this month.";
-    if (payments.status === "fulfilled") this.payments = payments.value;
-    else this.paymentsError = (payments.reason && payments.reason.message) || "Could not load payments for this month.";
-    this.loading = false;
+  created() {
+    this.load();
   },
   methods: {
     formatInr,
+    async load() {
+      this.loading = true;
+      this.error = "";
+      try {
+        this.summaries = await fetchWholesalerSummaries(this.applied.year, this.applied.month);
+      } catch (err) {
+        this.summaries = [];
+        this.error = err.message || "Could not load the wholesaler summary.";
+      } finally {
+        this.loading = false;
+      }
+    },
     apply() {
       this.applied = {
         month: this.draft.month,
         year: this.draft.year,
         wholesalerId: this.draft.wholesalerId,
       };
+      this.load();
     },
   },
 };

@@ -3,9 +3,35 @@ import { get } from "../api";
 const payments = [];
 let sequence = 1;
 
-export async function fetchPayments() {
-  const data = await get("/payments");
-  return Array.isArray(data) ? data : [];
+export async function fetchPayments(filters) {
+  const search = new URLSearchParams();
+  const source = filters && typeof filters === "object" ? filters : {};
+  if (source.wholesalerId !== undefined && source.wholesalerId !== null && source.wholesalerId !== "") {
+    search.set("wholesalerId", String(source.wholesalerId));
+  }
+  const hasMonth = source.month !== undefined && source.month !== null && source.month !== "";
+  const hasYear = source.year !== undefined && source.year !== null && source.year !== "";
+  if (hasMonth && hasYear) {
+    search.set("month", String(source.month));
+    search.set("year", String(source.year));
+  }
+  if (source.page !== undefined && source.page !== null && source.page !== "") {
+    search.set("page", String(source.page));
+  }
+  if (source.size !== undefined && source.size !== null && source.size !== "") {
+    search.set("size", String(source.size));
+  }
+  const query = search.toString();
+  const data = await get(query ? `/payments?${query}` : "/payments");
+  const body = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+  const items = Array.isArray(body.content) ? body.content : [];
+  return {
+    items,
+    page: Number(body.number) || 0,
+    size: Number(body.size) || items.length,
+    totalElements: Number(body.totalElements) || 0,
+    totalPages: Number(body.totalPages) || 0,
+  };
 }
 
 export async function fetchPayment(id) {
@@ -15,9 +41,16 @@ export async function fetchPayment(id) {
 }
 
 export async function fetchWholesalerPayments(wholesalerId) {
-  const data = await get(`/payments?wholesalerId=${encodeURIComponent(wholesalerId)}`);
-  const rows = Array.isArray(data) ? data : [];
-  return rows.filter((row) => String(row.wholesalerId) === String(wholesalerId));
+  const size = 100;
+  const first = await fetchPayments({ wholesalerId, page: 0, size });
+  const items = first.items.filter((row) => String(row.wholesalerId) === String(wholesalerId));
+  for (let page = 1; page < first.totalPages; page += 1) {
+    const next = await fetchPayments({ wholesalerId, page, size });
+    next.items.forEach((row) => {
+      if (String(row.wholesalerId) === String(wholesalerId)) items.push(row);
+    });
+  }
+  return items;
 }
 
 export const PAYMENT_METHODS = [

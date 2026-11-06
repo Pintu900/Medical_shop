@@ -214,7 +214,7 @@ export default {
         phone: this.form.phone ? `+91${this.form.phone}` : "",
         address: this.form.address,
         openingDue: amount.toFixed(2),
-        balanceDate: this.form.balanceDate || null,
+        openingBalanceDate: this.form.balanceDate || null,
       };
     },
     async onSubmit() {

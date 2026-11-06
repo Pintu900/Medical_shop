@@ -13,7 +13,7 @@
         <span>Wholesaler</span>
         <select v-model="wholesaler">
           <option value="">All wholesalers</option>
-          <option v-for="name in wholesalerNames" :key="name" :value="name">{{ name }}</option>
+          <option v-for="item in wholesalerOptions" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
         </select>
       </label>
       <div class="filters__period">
@@ -37,6 +37,7 @@
         <input v-model="query" type="search" placeholder="Search e.g. ABC-101" />
       </label>
     </div>
+    <p v-if="periodIncomplete" class="hint">Choose both a month and a year to filter by date.</p>
 
     <div class="table-wrap">
       <table>
@@ -58,7 +59,7 @@
             <td colspan="6" class="load-error">{{ error }}</td>
           </tr>
           <tr v-else-if="!filtered.length">
-            <td colspan="6" class="empty">No purchase bills match these filters.</td>
+            <td colspan="6" class="empty">{{ emptyMessage }}</td>
           </tr>
           <tr v-for="bill in filtered" :key="bill.id">
             <td>{{ formatBillDate(bill.billDate) }}</td>
@@ -81,7 +82,7 @@
     <ul class="cards">
       <li v-if="loading" class="card empty">Loading purchase bills…</li>
       <li v-else-if="error" class="card load-error">{{ error }}</li>
-      <li v-else-if="!filtered.length" class="card empty">No purchase bills match these filters.</li>
+      <li v-else-if="!filtered.length" class="card empty">{{ emptyMessage }}</li>
       <template v-else>
       <li v-for="bill in filtered" :key="bill.id" class="card">
         <div class="card__top">
@@ -102,73 +103,113 @@
 </template>
 
 <script>
-import { formatInr } from "../../../data/wholesalers";
+import { fetchWholesalers, formatInr } from "../../../data/wholesalers";
 import { fetchPurchaseBills, formatBillDate } from "../../../data/purchaseBills";
 
 const MONTHS = [
-  { value: "01", label: "Jan" },
-  { value: "02", label: "Feb" },
-  { value: "03", label: "Mar" },
-  { value: "04", label: "Apr" },
-  { value: "05", label: "May" },
-  { value: "06", label: "Jun" },
-  { value: "07", label: "Jul" },
-  { value: "08", label: "Aug" },
-  { value: "09", label: "Sep" },
+  { value: "1", label: "Jan" },
+  { value: "2", label: "Feb" },
+  { value: "3", label: "Mar" },
+  { value: "4", label: "Apr" },
+  { value: "5", label: "May" },
+  { value: "6", label: "Jun" },
+  { value: "7", label: "Jul" },
+  { value: "8", label: "Aug" },
+  { value: "9", label: "Sep" },
   { value: "10", label: "Oct" },
   { value: "11", label: "Nov" },
   { value: "12", label: "Dec" },
 ];
+
+function yearOptions() {
+  const current = new Date().getFullYear();
+  const years = [];
+  for (let year = current; year >= current - 7; year -= 1) years.push(String(year));
+  return years;
+}
 
 export default {
   name: "PurchaseBillList",
   data() {
     return {
       rows: [],
+      wholesalers: [],
       wholesaler: "",
       month: "",
       year: "",
       months: MONTHS,
+      years: yearOptions(),
       query: "",
       loading: false,
       error: "",
+      requestId: 0,
+      loadedKey: "",
     };
   },
   computed: {
-    wholesalerNames() {
-      return [...new Set(this.rows.map((bill) => bill.wholesalerName).filter(Boolean))].sort();
+    wholesalerOptions() {
+      return [...this.wholesalers].sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
     },
-    years() {
-      const fromBills = this.rows.map((bill) => String(bill.billDate || "").slice(0, 4)).filter((year) => /^\d{4}$/.test(year));
-      const current = String(new Date().getFullYear());
-      return [...new Set(fromBills.concat(current))].sort((a, b) => b.localeCompare(a));
+    billFilters() {
+      const filters = {};
+      if (this.wholesaler) filters.wholesalerId = this.wholesaler;
+      if (this.month && this.year) {
+        filters.month = Number(this.month);
+        filters.year = Number(this.year);
+      }
+      return filters;
+    },
+    periodIncomplete() {
+      return Boolean(this.month) !== Boolean(this.year);
+    },
+    emptyMessage() {
+      if (this.query.trim() || this.wholesaler || (this.month && this.year)) return "No purchase bills match these filters.";
+      return "No purchase bills yet.";
     },
     filtered() {
       const query = this.query.trim().toLowerCase();
-      return this.rows.filter((bill) => {
-        const date = String(bill.billDate || "");
-        const wholesalerMatch = !this.wholesaler || bill.wholesalerName === this.wholesaler;
-        const yearMatch = !this.year || date.startsWith(this.year);
-        const monthMatch = !this.month || date.slice(5, 7) === this.month;
-        const numberMatch = !query || String(bill.billNumber || "").toLowerCase().includes(query);
-        return wholesalerMatch && yearMatch && monthMatch && numberMatch;
-      });
+      if (!query) return this.rows;
+      return this.rows.filter((bill) => String(bill.billNumber || "").toLowerCase().includes(query));
+    },
+  },
+  watch: {
+    billFilters: {
+      immediate: true,
+      handler(filters) {
+        const key = JSON.stringify(filters);
+        if (key === this.loadedKey) return;
+        this.loadedKey = key;
+        this.load();
+      },
     },
   },
   async created() {
-    this.loading = true;
-    this.error = "";
     try {
-      this.rows = await fetchPurchaseBills();
+      this.wholesalers = await fetchWholesalers();
     } catch (err) {
-      this.error = err.message || "Could not load purchase bills.";
-    } finally {
-      this.loading = false;
+      this.wholesalers = [];
     }
   },
   methods: {
     formatInr,
     formatBillDate,
+    async load() {
+      const requestId = this.requestId + 1;
+      this.requestId = requestId;
+      this.loading = true;
+      this.error = "";
+      try {
+        const rows = await fetchPurchaseBills(this.billFilters);
+        if (this.requestId !== requestId) return;
+        this.rows = rows;
+      } catch (err) {
+        if (this.requestId !== requestId) return;
+        this.rows = [];
+        this.error = err.message || "Could not load purchase bills.";
+      } finally {
+        if (this.requestId === requestId) this.loading = false;
+      }
+    },
     attached(bill) {
       return Array.isArray(bill.attachments) && bill.attachments.length > 0;
     },
@@ -259,6 +300,12 @@ h1 {
 .filters select:focus {
   outline: 2px solid rgba(15, 118, 110, 0.25);
   border-color: #0f766e;
+}
+
+.hint {
+  margin: -0.35rem 0 0.85rem;
+  color: #64748b;
+  font-size: 0.85rem;
 }
 
 .table-wrap,

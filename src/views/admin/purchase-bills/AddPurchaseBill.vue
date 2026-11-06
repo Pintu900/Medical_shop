@@ -25,7 +25,7 @@
         </label>
         <label class="field">
           <span>Bill attachments (images only)</span>
-          <input type="file" accept="image/*" multiple @change="onFiles" />
+          <input type="file" accept="image/jpeg,image/png" multiple @change="onFiles" />
           <ul v-if="form.files.length" class="files">
             <li v-for="file in form.files" :key="file.id">
               <span>{{ file.name }}</span>
@@ -114,6 +114,7 @@
 
 <script>
 import { post } from "../../../api";
+import { attachmentSelectionError, uploadAttachments } from "../../../data/attachments";
 import { fetchWholesalers, formatInr } from "../../../data/wholesalers";
 
 const MONEY_INPUT = /^\d*(?:\.\d{0,2})?/;
@@ -154,6 +155,11 @@ export default {
       this.submitError = err.message || "Could not load wholesalers.";
     }
   },
+  beforeUnmount() {
+    this.form.files.forEach((file) => {
+      if (file.url) URL.revokeObjectURL(file.url);
+    });
+  },
   methods: {
     formatInr,
     onMoney(field, event) {
@@ -173,17 +179,17 @@ export default {
     },
     onFiles(event) {
       const selected = Array.from(event.target.files || []);
-      const images = selected.filter((file) => file.type.startsWith("image/"));
-      this.errors = {
-        ...this.errors,
-        file: images.length === selected.length ? "" : "Only image files were added.",
-      };
-      const next = images.map((file, index) => ({
-        id: `file-${Date.now()}-${index}`,
-        name: file.name,
-        url: URL.createObjectURL(file),
-      }));
-      this.form.files = this.form.files.concat(next);
+      const message = attachmentSelectionError(this.form.files.length, selected);
+      this.errors = { ...this.errors, file: message };
+      if (!message) {
+        const next = selected.map((file, index) => ({
+          id: `file-${Date.now()}-${index}`,
+          name: file.name,
+          url: URL.createObjectURL(file),
+          file,
+        }));
+        this.form.files = this.form.files.concat(next);
+      }
       event.target.value = "";
     },
     removeFile(id) {
@@ -238,8 +244,21 @@ export default {
       if (!this.validate()) return;
       this.submitting = true;
       try {
-        await post("/purchase-bills", this.payload());
-        this.$router.push("/admin/purchase-bills");
+        const created = await post("/purchase-bills", this.payload());
+        const id = created && created.id;
+        if (id == null) {
+          this.submitError = "The bill was saved, but its page could not be opened.";
+          return;
+        }
+        if (this.form.files.length) {
+          try {
+            await uploadAttachments(id, this.form.files.map((item) => item.file));
+          } catch (err) {
+            await this.$router.push({ path: `/admin/purchase-bills/${id}`, query: { uploadError: "1" } });
+            return;
+          }
+        }
+        await this.$router.push(`/admin/purchase-bills/${id}`);
       } catch (err) {
         this.submitError = err.message || "Could not save this purchase bill.";
       } finally {

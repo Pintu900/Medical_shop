@@ -70,6 +70,7 @@ export function ensureCsrf() {
 
 function failureMessage(status, data) {
   if (data && data.message) return data.message;
+  if (data && data.detail) return data.detail;
   if (status === 403) {
     return "You do not have permission for that action, or the request could not be verified. Refresh the page and try again.";
   }
@@ -87,7 +88,7 @@ async function request(path, options = {}) {
     headers[resolved.headerName] = resolved.token;
   }
 
-  if (!options.skipJson && options.body != null && !headers["Content-Type"]) {
+  if (!options.skipJson && options.responseType !== "blob" && options.body != null && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -110,9 +111,8 @@ async function request(path, options = {}) {
     clearTimeout(timer);
   }
 
-  const data = await response.json().catch(() => null);
-
   if (!response.ok) {
+    const data = await response.json().catch(() => null);
     if (response.status === 401 && !options.skipAuthRedirect && unauthorizedHandler) unauthorizedHandler();
     if (response.status === 403 && WRITE_METHODS[method] && !options.skipCsrf) clearCsrf();
     const error = new Error(failureMessage(response.status, data));
@@ -121,6 +121,9 @@ async function request(path, options = {}) {
     throw error;
   }
 
+  if (options.responseType === "blob") return response.blob();
+
+  const data = await response.json().catch(() => null);
   return data;
 }
 
@@ -136,6 +139,10 @@ export function put(path, body, options) {
   return request(path, Object.assign({}, options, { method: "PUT", body: JSON.stringify(body) }));
 }
 
+export function patch(path, body, options) {
+  return request(path, Object.assign({}, options, { method: "PATCH", body: JSON.stringify(body) }));
+}
+
 export function postForm(path, params, options) {
   return request(path, Object.assign({}, options, {
     method: "POST",
@@ -147,4 +154,12 @@ export function postForm(path, params, options) {
 
 export function postEmpty(path, options) {
   return request(path, Object.assign({}, options, { method: "POST", skipJson: true }));
+}
+
+export function postMultipart(path, formData, options) {
+  return request(path, Object.assign({}, options, { method: "POST", body: formData, skipJson: true }));
+}
+
+export function getBlob(path, options) {
+  return request(path, Object.assign({}, options, { responseType: "blob" }));
 }

@@ -10,7 +10,7 @@
           <span class="sr-only">Wholesaler</span>
           <select v-model="wholesalerId">
             <option value="">All wholesalers</option>
-            <option v-for="item in wholesalers" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
+            <option v-for="item in wholesalerOptions" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
           </select>
         </label>
         <label>
@@ -20,22 +20,24 @@
             <option v-for="item in months" :key="item.value" :value="item.value">{{ item.label }}</option>
           </select>
         </label>
+        <label>
+          <span class="sr-only">Year</span>
+          <select v-model="year">
+            <option value="">All years</option>
+            <option v-for="item in years" :key="item" :value="item">{{ item }}</option>
+          </select>
+        </label>
         <RouterLink class="btn-add" to="/admin/payments/new">+ Record payment</RouterLink>
       </div>
     </header>
 
-    <p v-if="error" class="load-error" role="alert">{{ error }}</p>
+    <p v-if="periodIncomplete" class="hint">Choose both a month and a year to filter by date.</p>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th scope="col">
-              <button type="button" class="sort" @click="toggleSort">
-                Date
-                <span aria-hidden="true">{{ sort === "desc" ? "↓" : "↑" }}</span>
-              </button>
-            </th>
+            <th scope="col">Date</th>
             <th scope="col">Wholesaler</th>
             <th scope="col">Amount</th>
             <th scope="col">Payment method</th>
@@ -47,11 +49,14 @@
           <tr v-if="loading">
             <td colspan="6" class="empty">Loading payments…</td>
           </tr>
-          <tr v-else-if="!filtered.length">
-            <td colspan="6" class="empty">No payments match these filters.</td>
+          <tr v-else-if="error">
+            <td colspan="6" class="load-error">{{ error }}</td>
+          </tr>
+          <tr v-else-if="!rows.length">
+            <td colspan="6" class="empty">{{ emptyMessage }}</td>
           </tr>
           <template v-else>
-            <tr v-for="payment in paged" :key="payment.id">
+            <tr v-for="payment in rows" :key="payment.id">
               <td>
                 <RouterLink class="link" :to="`/admin/payments/${payment.id}`">{{ formatPaymentDate(payment.paymentDate) }}</RouterLink>
               </td>
@@ -68,9 +73,10 @@
 
     <ul class="cards">
       <li v-if="loading" class="card empty">Loading payments…</li>
-      <li v-else-if="!filtered.length" class="card empty">No payments match these filters.</li>
+      <li v-else-if="error" class="card load-error">{{ error }}</li>
+      <li v-else-if="!rows.length" class="card empty">{{ emptyMessage }}</li>
       <template v-else>
-        <li v-for="payment in paged" :key="payment.id" class="card">
+        <li v-for="payment in rows" :key="payment.id" class="card">
           <div class="card__top">
             <RouterLink class="link" :to="`/admin/payments/${payment.id}`">{{ formatPaymentDate(payment.paymentDate) }}</RouterLink>
             <strong>{{ formatInr(payment.amount) }}</strong>
@@ -82,20 +88,20 @@
       </template>
     </ul>
 
-    <footer v-if="!loading && filtered.length" class="pager">
+    <footer v-if="!loading && !error && totalElements" class="pager">
       <p>{{ rangeLabel }}</p>
       <div>
-        <button type="button" :disabled="page === 1" @click="page -= 1">‹</button>
+        <button type="button" :disabled="page === 0" @click="page -= 1">‹</button>
         <button
-          v-for="number in pageCount"
+          v-for="number in totalPages"
           :key="number"
           type="button"
-          :class="{ 'is-on': number === page }"
-          @click="page = number"
+          :class="{ 'is-on': number - 1 === page }"
+          @click="page = number - 1"
         >
           {{ number }}
         </button>
-        <button type="button" :disabled="page === pageCount" @click="page += 1">›</button>
+        <button type="button" :disabled="page + 1 >= totalPages" @click="page += 1">›</button>
       </div>
     </footer>
   </section>
@@ -105,15 +111,28 @@
 import { fetchWholesalers, formatInr } from "../../../data/wholesalers";
 import { fetchPayments, formatPaymentDate, methodLabel } from "../../../data/payments";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 20;
 
-function monthKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
+const MONTHS = [
+  { value: "1", label: "Jan" },
+  { value: "2", label: "Feb" },
+  { value: "3", label: "Mar" },
+  { value: "4", label: "Apr" },
+  { value: "5", label: "May" },
+  { value: "6", label: "Jun" },
+  { value: "7", label: "Jul" },
+  { value: "8", label: "Aug" },
+  { value: "9", label: "Sep" },
+  { value: "10", label: "Oct" },
+  { value: "11", label: "Nov" },
+  { value: "12", label: "Dec" },
+];
 
-function monthLabel(key) {
-  const [year, month] = key.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" }).format(new Date(year, month - 1, 1));
+function yearOptions() {
+  const current = new Date().getFullYear();
+  const years = [];
+  for (let year = current; year >= current - 7; year -= 1) years.push(String(year));
+  return years;
 }
 
 export default {
@@ -124,73 +143,97 @@ export default {
       wholesalers: [],
       wholesalerId: "",
       month: "",
-      sort: "desc",
-      page: 1,
+      year: "",
+      months: MONTHS,
+      years: yearOptions(),
+      page: 0,
+      totalElements: 0,
+      totalPages: 0,
       loading: false,
       error: "",
+      requestId: 0,
+      loadedKey: "",
     };
   },
   computed: {
-    months() {
-      const keys = this.rows.map((payment) => String(payment.paymentDate || "").slice(0, 7)).filter((key) => /^\d{4}-\d{2}$/.test(key));
-      return [...new Set(keys.concat(monthKey(new Date())))]
-        .sort((a, b) => b.localeCompare(a))
-        .map((value) => ({ value, label: monthLabel(value) }));
+    wholesalerOptions() {
+      return [...this.wholesalers].sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
     },
-    filtered() {
-      return this.rows.filter((payment) => {
-        const wholesalerMatch = !this.wholesalerId || String(payment.wholesalerId) === this.wholesalerId;
-        const monthMatch = !this.month || String(payment.paymentDate || "").startsWith(this.month);
-        return wholesalerMatch && monthMatch;
-      });
+    paymentFilters() {
+      const filters = { page: this.page, size: PAGE_SIZE };
+      if (this.wholesalerId) filters.wholesalerId = this.wholesalerId;
+      if (this.month && this.year) {
+        filters.month = Number(this.month);
+        filters.year = Number(this.year);
+      }
+      return filters;
     },
-    sorted() {
-      return [...this.filtered].sort((a, b) => {
-        const order = String(a.paymentDate).localeCompare(String(b.paymentDate)) || (Number(a.id) || 0) - (Number(b.id) || 0);
-        return this.sort === "asc" ? order : -order;
-      });
+    periodIncomplete() {
+      return Boolean(this.month) !== Boolean(this.year);
     },
-    pageCount() {
-      return Math.max(1, Math.ceil(this.sorted.length / PAGE_SIZE));
-    },
-    paged() {
-      const start = (this.page - 1) * PAGE_SIZE;
-      return this.sorted.slice(start, start + PAGE_SIZE);
+    emptyMessage() {
+      if (this.wholesalerId || (this.month && this.year)) return "No payments match these filters.";
+      return "No payments yet.";
     },
     rangeLabel() {
-      const start = (this.page - 1) * PAGE_SIZE + 1;
-      const end = Math.min(this.page * PAGE_SIZE, this.sorted.length);
-      const noun = this.sorted.length === 1 ? "payment" : "payments";
-      return `Showing ${start}–${end} of ${this.sorted.length} ${noun}`;
+      if (!this.totalElements || !this.rows.length) return "";
+      const start = this.page * PAGE_SIZE + 1;
+      const end = start + this.rows.length - 1;
+      const noun = this.totalElements === 1 ? "payment" : "payments";
+      return `Showing ${start}–${end} of ${this.totalElements} ${noun}`;
     },
   },
   watch: {
     wholesalerId() {
-      this.page = 1;
+      if (this.page !== 0) this.page = 0;
     },
     month() {
-      this.page = 1;
+      if (this.page !== 0) this.page = 0;
     },
-    pageCount(count) {
-      if (this.page > count) this.page = count;
+    year() {
+      if (this.page !== 0) this.page = 0;
+    },
+    paymentFilters: {
+      immediate: true,
+      handler(filters) {
+        const key = JSON.stringify(filters);
+        if (key === this.loadedKey) return;
+        this.loadedKey = key;
+        this.load();
+      },
     },
   },
   async created() {
-    this.loading = true;
-    this.error = "";
-    const [payments, wholesalers] = await Promise.allSettled([fetchPayments(), fetchWholesalers()]);
-    if (payments.status === "fulfilled") this.rows = payments.value;
-    else this.error = payments.reason.message || "Could not load payments.";
-    if (wholesalers.status === "fulfilled") this.wholesalers = wholesalers.value;
-    else if (!this.error) this.error = wholesalers.reason.message || "Could not load wholesalers.";
-    this.loading = false;
+    try {
+      this.wholesalers = await fetchWholesalers();
+    } catch (err) {
+      this.wholesalers = [];
+    }
   },
   methods: {
     formatInr,
     formatPaymentDate,
     methodLabel,
-    toggleSort() {
-      this.sort = this.sort === "desc" ? "asc" : "desc";
+    async load() {
+      const requestId = this.requestId + 1;
+      this.requestId = requestId;
+      this.loading = true;
+      this.error = "";
+      try {
+        const data = await fetchPayments(this.paymentFilters);
+        if (this.requestId !== requestId) return;
+        this.rows = data.items;
+        this.totalElements = data.totalElements;
+        this.totalPages = data.totalPages;
+      } catch (err) {
+        if (this.requestId !== requestId) return;
+        this.rows = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.error = err.message || "Could not load payments.";
+      } finally {
+        if (this.requestId === requestId) this.loading = false;
+      }
     },
   },
 };
@@ -262,6 +305,12 @@ h1 {
   font-weight: 600;
 }
 
+.hint {
+  margin: 0.85rem 0 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
 .table-wrap,
 .card {
   margin-top: 1rem;
@@ -286,19 +335,6 @@ td {
 th {
   color: #64748b;
   font-size: 0.78rem;
-}
-
-.sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
 }
 
 .link {

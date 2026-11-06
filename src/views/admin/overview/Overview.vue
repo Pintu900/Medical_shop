@@ -6,7 +6,7 @@
         <p>Purchase and payment summary</p>
       </div>
       <div class="period">
-        <label class="month">
+        <label class="year">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
             <path
               d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"
@@ -16,21 +16,21 @@
               stroke-linecap="round"
             />
           </svg>
-          <span class="sr-only">Month</span>
-          <select v-model="month">
-            <option v-for="item in months" :key="item.value" :value="item.value">{{ item.label }}</option>
+          <span class="sr-only">Financial year</span>
+          <select v-model.number="financialYearStart">
+            <option v-for="item in financialYears" :key="item.value" :value="item.value">{{ item.label }}</option>
           </select>
         </label>
         <p class="range">
-          <strong>Month to date</strong>
+          <strong>Financial year</strong>
           <span>{{ rangeLabel }}</span>
         </p>
       </div>
     </header>
 
-    <p v-if="loading" class="status">Loading overview…</p>
+    <p v-if="summaryLoading" class="status">Loading overview…</p>
+    <p v-if="summaryError" class="status status--error" role="alert">{{ summaryError }}</p>
     <p v-if="error" class="status status--error" role="alert">{{ error }}</p>
-    <p v-if="billsError" class="status status--error" role="alert">{{ billsError }}</p>
 
     <div class="stats">
       <article class="stat stat--purchase">
@@ -42,7 +42,7 @@
         </span>
         <span>Total purchases</span>
         <strong>{{ formatInr(totals.purchases) }}</strong>
-        <small>{{ countLabel(totals.billCount, "bill", "bills") }}</small>
+        <small>This financial year</small>
       </article>
       <article class="stat stat--payment">
         <span class="stat__icon" aria-hidden="true">
@@ -52,7 +52,7 @@
         </span>
         <span>Total payments</span>
         <strong>{{ formatInr(totals.payments) }}</strong>
-        <small>{{ countLabel(totals.paymentCount, "payment", "payments", "No payments") }}</small>
+        <small>This financial year</small>
       </article>
       <article class="stat stat--due">
         <span class="stat__icon" aria-hidden="true">
@@ -62,7 +62,7 @@
         </span>
         <span>Outstanding dues</span>
         <strong>{{ formatInr(totals.dues) }}</strong>
-        <small>{{ countLabel(totals.dueCount, "wholesaler", "wholesalers") }}</small>
+        <small>Across wholesalers</small>
       </article>
       <article class="stat stat--opening">
         <span class="stat__icon" aria-hidden="true">
@@ -72,7 +72,7 @@
         </span>
         <span>Opening balance</span>
         <strong>{{ formatInr(totals.opening) }}</strong>
-        <small>Recorded opening dues</small>
+        <small>Start of the year</small>
       </article>
     </div>
 
@@ -149,108 +149,107 @@
       </ul>
     </section>
 
-    <p class="note">Payments are the initial amounts recorded on purchase bills.</p>
+    <p class="note">The wholesaler table shows each wholesaler’s current balance.</p>
   </section>
 </template>
 
 <script>
+import { fetchOverallSummary } from "../../../data/reports";
 import { fetchOutstandingDues, formatInr } from "../../../data/wholesalers";
-import { fetchPurchaseBills } from "../../../data/purchaseBills";
 
-function monthKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+function currentFinancialYearStart(date) {
+  const year = date.getFullYear();
+  return date.getMonth() >= 3 ? year : year - 1;
 }
 
-function monthOptions() {
-  const now = new Date();
+function financialYearOptions(start) {
   const options = [];
-  for (let i = 0; i < 12; i += 1) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    options.push({
-      value: monthKey(date),
-      label: new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" }).format(date),
-    });
+  for (let i = 0; i < 5; i += 1) {
+    const year = start - i;
+    options.push({ value: year, label: `${year}–${year + 1}` });
   }
   return options;
 }
 
-function parseBillDate(value) {
+function formatIsoDay(value) {
   const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function formatDay(date) {
+  if (Number.isNaN(date.getTime())) return "";
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
 }
 
 export default {
   name: "AdminOverview",
   data() {
+    const financialYearStart = currentFinancialYearStart(new Date());
     return {
-      month: monthKey(new Date()),
-      months: monthOptions(),
+      financialYearStart,
+      financialYears: financialYearOptions(financialYearStart),
+      summary: null,
       dues: [],
-      bills: [],
+      summaryLoading: false,
       loading: false,
+      summaryError: "",
       error: "",
-      billsError: "",
     };
   },
   computed: {
-    period() {
-      const [year, month] = String(this.month).split("-").map(Number);
-      const start = new Date(year, month - 1, 1);
-      const endOfMonth = new Date(year, month, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return { start, end: endOfMonth < today ? endOfMonth : today };
-    },
     rangeLabel() {
-      return `${formatDay(this.period.start)} – ${formatDay(this.period.end)}`;
-    },
-    billsInRange() {
-      const { start, end } = this.period;
-      return this.bills.filter((bill) => {
-        const date = parseBillDate(bill.billDate);
-        return date && date >= start && date <= end;
-      });
+      const summary = this.summary;
+      const through = summary && (summary.asOfDate || summary.endDate);
+      if (summary && summary.startDate && through) {
+        return `${formatIsoDay(summary.startDate)} – ${formatIsoDay(through)}`;
+      }
+      return `1 Apr ${this.financialYearStart} – 31 Mar ${this.financialYearStart + 1}`;
     },
     rows() {
       return [...this.dues].sort((a, b) => String(a.wholesalerName || "").localeCompare(String(b.wholesalerName || "")));
     },
     totals() {
-      const purchases = this.billsInRange.reduce((sum, bill) => sum + (Number(bill.totalAmount) || 0), 0);
-      const payments = this.billsInRange.reduce((sum, bill) => sum + (Number(bill.paidAmount) || 0), 0);
-      const paymentCount = this.billsInRange.filter((bill) => Number(bill.paidAmount) > 0).length;
-      const opening = this.dues.reduce((sum, item) => sum + (Number(item.openingDue) || 0), 0);
-      const owing = this.dues.filter((item) => Number(item.currentDue) > 0);
+      const summary = this.summary || {};
       return {
-        purchases,
-        payments,
-        paymentCount,
-        billCount: this.billsInRange.length,
-        dues: owing.reduce((sum, item) => sum + (Number(item.currentDue) || 0), 0),
-        dueCount: owing.length,
-        opening,
+        purchases: Number(summary.totalPurchases) || 0,
+        payments: Number(summary.totalPayments) || 0,
+        dues: Number(summary.totalOutstandingDues) || 0,
+        opening: Number(summary.openingBalance) || 0,
       };
+    },
+  },
+  watch: {
+    financialYearStart: {
+      immediate: true,
+      handler() {
+        this.loadSummary();
+      },
     },
   },
   async created() {
     this.loading = true;
     this.error = "";
-    this.billsError = "";
-    const [dues, bills] = await Promise.allSettled([fetchOutstandingDues(), fetchPurchaseBills()]);
-    if (dues.status === "fulfilled") this.dues = dues.value;
-    else this.error = dues.reason.message || "Could not load wholesalers.";
-    if (bills.status === "fulfilled") this.bills = bills.value;
-    else this.billsError = bills.reason.message || "Could not load purchase bills.";
-    this.loading = false;
+    try {
+      this.dues = await fetchOutstandingDues();
+    } catch (err) {
+      this.error = err.message || "Could not load wholesalers.";
+    } finally {
+      this.loading = false;
+    }
   },
   methods: {
     formatInr,
-    countLabel(count, singular, plural, empty) {
-      if (!count) return empty || `0 ${plural}`;
-      return `${count} ${count === 1 ? singular : plural}`;
+    async loadSummary() {
+      const year = this.financialYearStart;
+      this.summaryLoading = true;
+      this.summaryError = "";
+      this.summary = null;
+      try {
+        const summary = await fetchOverallSummary(year);
+        if (this.financialYearStart !== year) return;
+        this.summary = summary;
+      } catch (err) {
+        if (this.financialYearStart !== year) return;
+        this.summaryError = err.message || "Could not load this financial year.";
+      } finally {
+        if (this.financialYearStart === year) this.summaryLoading = false;
+      }
     },
   },
 };
@@ -294,7 +293,7 @@ h1 {
   gap: 0.85rem;
 }
 
-.month {
+.year {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -305,7 +304,7 @@ h1 {
   padding: 0.45rem 0.7rem;
 }
 
-.month select {
+.year select {
   border: 0;
   background: transparent;
   font: inherit;
@@ -313,7 +312,7 @@ h1 {
   color: inherit;
 }
 
-.month select:focus {
+.year select:focus {
   outline: none;
 }
 
@@ -588,11 +587,11 @@ th {
     gap: 0.55rem;
   }
 
-  .month {
+  .year {
     width: 100%;
   }
 
-  .month select {
+  .year select {
     flex: 1;
     min-width: 0;
   }

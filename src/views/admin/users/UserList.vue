@@ -13,6 +13,8 @@
         <button class="btn-add" type="button" @click="openCreate">+ Add user</button>
       </header>
 
+      <p v-if="error" class="load-error" role="alert">{{ error }}</p>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -25,7 +27,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-if="!users.length">
+            <tr v-if="loading">
+              <td colspan="5" class="empty">Loading users…</td>
+            </tr>
+            <tr v-else-if="!users.length && !error">
               <td colspan="5" class="empty">No users yet.</td>
             </tr>
             <template v-else>
@@ -46,7 +51,8 @@
       </div>
 
       <ul class="cards">
-        <li v-if="!users.length" class="card empty">No users yet.</li>
+        <li v-if="loading" class="card empty">Loading users…</li>
+        <li v-else-if="!users.length && !error" class="card empty">No users yet.</li>
         <template v-else>
           <li v-for="user in users" :key="user.id" class="card">
             <div class="card__top">
@@ -61,6 +67,15 @@
           </li>
         </template>
       </ul>
+
+      <footer v-if="!loading && totalElements" class="pager">
+        <p>{{ rangeLabel }}</p>
+        <div>
+          <button type="button" :disabled="page === 0" @click="go(page - 1)">‹</button>
+          <span>Page {{ page + 1 }} of {{ totalPages || 1 }}</span>
+          <button type="button" :disabled="page + 1 >= totalPages" @click="go(page + 1)">›</button>
+        </div>
+      </footer>
     </div>
 
     <aside v-if="editorOpen" class="drawer">
@@ -92,15 +107,17 @@
           <small v-if="errors.role" class="field__error">{{ errors.role }}</small>
         </label>
 
-        <label class="field">
+        <label v-if="passwordAllowed" class="field">
           <span>{{ editor.id ? "New password (optional)" : "Password" }}</span>
           <span class="secret">
             <input v-model="editor.password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" :aria-invalid="Boolean(errors.password)" />
             <button class="secret__toggle" type="button" @click="showPassword = !showPassword">{{ showPassword ? "Hide" : "Show" }}</button>
           </span>
-          <small v-if="editor.id" class="hint">Leave empty to keep the current password.</small>
+          <small v-if="editor.id" class="hint">Leave empty to keep the current password. Use at least 12 characters.</small>
+          <small v-else class="hint">Use at least 12 characters.</small>
           <small v-if="errors.password" class="field__error">{{ errors.password }}</small>
         </label>
+        <p v-else class="hint">Password changes through this form are limited to staff and viewer accounts.</p>
 
         <label v-if="editor.id" class="field">
           <span>Reason for change</span>
@@ -108,13 +125,15 @@
           <small v-if="errors.reason" class="field__error">{{ errors.reason }}</small>
         </label>
 
-        <button v-if="editor.id" class="btn-deactivate" type="button" @click="toggleActive">
+        <p v-if="submitError" class="field__error" role="alert">{{ submitError }}</p>
+
+        <button v-if="editor.id" class="btn-deactivate" type="button" :disabled="saving" @click="toggleActive">
           {{ editor.active ? "Deactivate user" : "Activate user" }}
         </button>
 
         <div class="drawer__actions">
-          <button class="btn-cancel" type="button" @click="closeEditor">Cancel</button>
-          <button class="btn-save" type="submit">{{ editor.id ? "Save changes" : "Create user" }}</button>
+          <button class="btn-cancel" type="button" :disabled="saving" @click="closeEditor">Cancel</button>
+          <button class="btn-save" type="submit" :disabled="saving">{{ saveLabel }}</button>
         </div>
       </form>
     </aside>
@@ -122,26 +141,60 @@
 </template>
 
 <script>
-import { USER_ROLES, createUser, listUsers, roleLabel, updateUser } from "../../../data/users";
+import { USER_ROLES, createUser, fetchUsers, roleLabel, updateUser, updateUserStatus } from "../../../data/users";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PAGE_SIZE = 20;
 
 function blankEditor() {
   return { id: null, name: "", email: "", role: "STAFF", password: "", reason: "", active: true };
+}
+
+function errorText(err, fallback) {
+  const data = err && err.data;
+  if (data && data.message) return data.message;
+  if (data && data.detail) return data.detail;
+  return (err && err.message) || fallback;
 }
 
 export default {
   name: "UserList",
   data() {
     return {
-      users: listUsers(),
+      users: [],
       roles: USER_ROLES,
+      page: 0,
+      size: PAGE_SIZE,
+      totalElements: 0,
+      totalPages: 0,
+      loading: false,
+      error: "",
+      saving: false,
+      submitError: "",
       editorOpen: false,
       editor: blankEditor(),
       errors: {},
       showPassword: false,
       narrow: false,
     };
+  },
+  computed: {
+    rangeLabel() {
+      if (!this.totalElements) return "0 users";
+      const start = this.page * this.size + 1;
+      const end = start + this.users.length - 1;
+      return `${start}–${end} of ${this.totalElements}`;
+    },
+    passwordAllowed() {
+      return !this.editor.id || (this.editor.originalRole !== "OWNER" && this.editor.role !== "OWNER");
+    },
+    saveLabel() {
+      if (this.saving) return "Saving…";
+      return this.editor.id ? "Save changes" : "Create user";
+    },
+  },
+  created() {
+    this.load();
   },
   mounted() {
     this.onResize();
@@ -158,52 +211,124 @@ export default {
     openCreate() {
       this.editor = blankEditor();
       this.errors = {};
+      this.submitError = "";
       this.showPassword = false;
       this.editorOpen = true;
     },
     openEdit(user) {
-      this.editor = { id: user.id, name: user.name, email: user.email, role: user.role, password: "", reason: "", active: user.active };
+      this.editor = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        originalRole: user.role,
+        password: "",
+        reason: "",
+        active: user.active,
+      };
       this.errors = {};
+      this.submitError = "";
       this.showPassword = false;
       this.editorOpen = true;
     },
     closeEditor() {
+      if (this.saving) return;
       this.editorOpen = false;
       this.errors = {};
+      this.submitError = "";
     },
-    validate() {
+    validate(includePassword) {
       const errors = {};
       if (!this.editor.name) errors.name = "Enter the full name.";
       if (!this.editor.id) {
         if (!this.editor.email) errors.email = "Enter an email address.";
         else if (!EMAIL_PATTERN.test(this.editor.email)) errors.email = "Enter a valid email address.";
-        else if (this.users.some((user) => user.email.toLowerCase() === this.editor.email.toLowerCase())) errors.email = "A user with this email already exists.";
-        if (!this.editor.password) errors.password = "Enter a password.";
       }
       if (!this.editor.role) errors.role = "Choose a role.";
+      if (includePassword && this.passwordAllowed && this.editor.password) {
+        if (this.editor.password.length < 12 || this.editor.password.length > 72) {
+          errors.password = "Use 12 to 72 characters. The password is not trimmed.";
+        }
+      }
+      if (!this.editor.id && !this.editor.password) errors.password = "Enter a password.";
+      if (!this.editor.id && this.editor.password && (this.editor.password.length < 12 || this.editor.password.length > 72)) {
+        errors.password = "Use 12 to 72 characters. The password is not trimmed.";
+      }
       if (this.editor.id && !this.editor.reason) errors.reason = "Enter a reason for this change.";
       this.errors = errors;
       return Object.keys(errors).length === 0;
     },
-    save() {
-      if (!this.validate()) return;
-      if (this.editor.id) {
-        updateUser(this.editor.id, { name: this.editor.name, role: this.editor.role, active: this.editor.active });
-      } else {
-        createUser({ name: this.editor.name, email: this.editor.email, role: this.editor.role });
+    async load() {
+      this.loading = true;
+      this.error = "";
+      try {
+        const data = await fetchUsers(this.page, PAGE_SIZE);
+        this.users = data.items;
+        this.page = data.page;
+        this.size = data.size;
+        this.totalElements = data.totalElements;
+        this.totalPages = data.totalPages;
+      } catch (err) {
+        this.users = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.error = errorText(err, "Could not load users.");
+      } finally {
+        this.loading = false;
       }
-      this.users = listUsers();
-      this.closeEditor();
     },
-    toggleActive() {
+    go(page) {
+      this.page = page;
+      this.load();
+    },
+    async save() {
+      if (this.saving || !this.validate(true)) return;
+      this.saving = true;
+      this.submitError = "";
+      try {
+        if (this.editor.id) {
+          await updateUser(this.editor.id, {
+            name: this.editor.name,
+            role: this.editor.role,
+            reason: this.editor.reason,
+            password: this.passwordAllowed ? this.editor.password : "",
+          });
+        } else {
+          await createUser({
+            name: this.editor.name,
+            email: this.editor.email,
+            password: this.editor.password,
+            role: this.editor.role,
+          });
+          this.page = 0;
+        }
+        this.saving = false;
+        this.closeEditor();
+        await this.load();
+      } catch (err) {
+        this.submitError = errorText(err, "Could not save this user.");
+      } finally {
+        this.saving = false;
+      }
+    },
+    async toggleActive() {
+      if (this.saving) return;
       if (!this.editor.reason) {
         this.errors = { ...this.errors, reason: "Enter a reason for this change." };
         return;
       }
-      this.editor.active = !this.editor.active;
-      updateUser(this.editor.id, { name: this.editor.name, role: this.editor.role, active: this.editor.active });
-      this.users = listUsers();
-      this.closeEditor();
+      this.saving = true;
+      this.submitError = "";
+      try {
+        await updateUserStatus(this.editor.id, !this.editor.active, this.editor.reason);
+        this.saving = false;
+        this.closeEditor();
+        await this.load();
+      } catch (err) {
+        this.submitError = errorText(err, "Could not update this user's status.");
+      } finally {
+        this.saving = false;
+      }
     },
   },
 };
@@ -379,6 +504,57 @@ th {
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.load-error,
+.field__error {
+  color: #b42318;
+}
+
+.load-error {
+  margin: 0.8rem 0 0;
+  font-weight: 600;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.pager p,
+.pager span {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.pager div {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pager button {
+  min-width: 2rem;
+  height: 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pager button:disabled,
+.btn-save:disabled,
+.btn-cancel:disabled,
+.btn-deactivate:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .cards {

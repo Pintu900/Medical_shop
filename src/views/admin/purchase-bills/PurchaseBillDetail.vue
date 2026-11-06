@@ -60,27 +60,35 @@
           </dl>
 
           <h2>Attachments</h2>
-          <p v-if="!attachments.length" class="muted">No image attached.</p>
+          <p v-if="uploadWarning" class="warn" role="alert">The bill was saved, but the images were not uploaded. Add them below.</p>
+          <p v-if="attachmentError" class="warn" role="alert">{{ attachmentError }}</p>
+          <p v-if="attachmentsLoading" class="muted">Loading attachments…</p>
+          <p v-else-if="!attachments.length" class="muted">No image attached.</p>
           <div v-else class="files">
             <button
               v-for="file in attachments"
               :key="file.id"
               type="button"
               :class="{ 'is-on': selected && selected.id === file.id }"
-              @click="selected = file"
+              @click="selectAttachment(file)"
             >
-              {{ file.name }}
+              {{ file.originalFilename }}
             </button>
           </div>
+          <label v-if="canUpload" class="upload">
+            Add JPG or PNG images
+            <input type="file" accept="image/jpeg,image/png" multiple :disabled="uploading" @change="onFiles" />
+          </label>
         </article>
 
         <article class="card preview">
           <h2>Image preview</h2>
-          <p class="muted">{{ selected ? selected.name : "No attachment selected" }}</p>
-          <img v-if="selected && selected.url" :src="selected.url" :alt="selected.name" />
+          <p class="muted">{{ selected ? selected.originalFilename : "No attachment selected" }}</p>
+          <p v-if="previewLoading" class="muted">Loading image…</p>
+          <img v-else-if="previewUrl" :src="previewUrl" :alt="selected ? selected.originalFilename : 'Attachment'" />
           <div v-else class="placeholder">
-            <strong>{{ selected ? selected.name : "No image" }}</strong>
-            <span>{{ selected ? "Preview is available after you upload an image." : "This bill has no attachment yet." }}</span>
+            <strong>{{ selected ? selected.originalFilename : "No image" }}</strong>
+            <span>{{ previewError || (selected ? "The image could not be shown." : "This bill has no attachment yet.") }}</span>
           </div>
         </article>
       </div>
@@ -89,6 +97,8 @@
 </template>
 
 <script>
+import { session } from "../../../auth";
+import { attachmentSelectionError, fetchAttachmentContent, fetchAttachments, uploadAttachments } from "../../../data/attachments";
 import { formatInr } from "../../../data/wholesalers";
 import { fetchPurchaseBill, formatBillDate } from "../../../data/purchaseBills";
 
@@ -104,7 +114,15 @@ export default {
   data() {
     return {
       bill: null,
+      attachments: [],
       selected: null,
+      previewUrl: "",
+      previewLoading: false,
+      previewError: "",
+      attachmentsLoading: false,
+      attachmentError: "",
+      uploading: false,
+      uploadWarning: false,
       loading: false,
       loadError: "",
     };
@@ -127,8 +145,9 @@ export default {
       const reference = this.bill && this.bill.initialPayment && this.bill.initialPayment.reference;
       return reference || "—";
     },
-    attachments() {
-      return this.bill && Array.isArray(this.bill.attachments) ? this.bill.attachments : [];
+    canUpload() {
+      const role = session.user && session.user.role;
+      return role !== "VIEWER";
     },
   },
   watch: {
@@ -137,12 +156,14 @@ export default {
       async handler(id) {
         this.loading = true;
         this.loadError = "";
+        this.revokePreview();
         this.bill = null;
+        this.attachments = [];
         this.selected = null;
+        this.uploadWarning = this.$route.query.uploadError === "1";
         try {
-          const bill = await fetchPurchaseBill(id);
-          this.bill = bill;
-          this.selected = bill && Array.isArray(bill.attachments) && bill.attachments.length ? bill.attachments[0] : null;
+          this.bill = await fetchPurchaseBill(id);
+          await this.loadAttachments(id);
         } catch (err) {
           this.loadError = err.message || "Could not load this purchase bill.";
         } finally {
@@ -151,9 +172,64 @@ export default {
       },
     },
   },
+  beforeUnmount() {
+    this.revokePreview();
+  },
   methods: {
     formatInr,
     formatBillDate,
+    revokePreview() {
+      if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+      this.previewUrl = "";
+    },
+    async loadAttachments(purchaseId) {
+      this.attachmentsLoading = true;
+      this.attachmentError = "";
+      try {
+        this.attachments = await fetchAttachments(purchaseId);
+        if (this.attachments.length) await this.selectAttachment(this.attachments[0]);
+        else this.selected = null;
+      } catch (err) {
+        this.attachments = [];
+        this.attachmentError = err.message || "Could not load attachments.";
+      } finally {
+        this.attachmentsLoading = false;
+      }
+    },
+    async selectAttachment(file) {
+      this.selected = file;
+      this.revokePreview();
+      this.previewError = "";
+      this.previewLoading = true;
+      try {
+        const blob = await fetchAttachmentContent(this.bill.id, file.id);
+        this.previewUrl = URL.createObjectURL(blob);
+      } catch (err) {
+        this.previewError = err.message || "Could not load this image.";
+      } finally {
+        this.previewLoading = false;
+      }
+    },
+    async onFiles(event) {
+      const selected = Array.from(event.target.files || []);
+      const message = attachmentSelectionError(0, selected);
+      event.target.value = "";
+      if (message) {
+        this.attachmentError = message;
+        return;
+      }
+      this.uploading = true;
+      this.attachmentError = "";
+      try {
+        await uploadAttachments(this.bill.id, selected);
+        this.uploadWarning = false;
+        await this.loadAttachments(this.bill.id);
+      } catch (err) {
+        this.attachmentError = err.message || "Could not upload these images.";
+      } finally {
+        this.uploading = false;
+      }
+    },
   },
 };
 </script>
@@ -299,6 +375,27 @@ dd {
 .placeholder span {
   color: #64748b;
   max-width: 18rem;
+}
+
+.warn {
+  margin: 0.4rem 0 0;
+  color: #b42318;
+  font-size: 0.9rem;
+}
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.upload input {
+  font: inherit;
+  font-weight: 500;
 }
 
 @media (max-width: 800px) {
