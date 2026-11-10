@@ -1,9 +1,14 @@
 <template>
-  <div class="app-shell">
-    <Navbar />
-    <RouterView />
-    <SiteFooter />
-    <BackToTop />
+  <div class="app-shell" :class="{ 'app-shell--admin': isAdmin }">
+    <template v-if="isAdmin">
+      <RouterView />
+    </template>
+    <template v-else>
+      <Navbar />
+      <RouterView />
+      <SiteFooter />
+      <BackToTop />
+    </template>
   </div>
 </template>
 
@@ -18,6 +23,22 @@ export default {
     Navbar,
     SiteFooter,
     BackToTop,
+  },
+  computed: {
+    isAdmin() {
+      return this.$route.matched.some((record) => record.meta.admin);
+    },
+  },
+  watch: {
+    isAdmin: {
+      immediate: true,
+      handler(isAdmin) {
+        document.body.classList.toggle("is-admin", isAdmin);
+      },
+    },
+  },
+  unmounted() {
+    document.body.classList.remove("is-admin");
   },
 };
 </script>
