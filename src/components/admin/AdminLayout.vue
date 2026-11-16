@@ -38,7 +38,10 @@
             <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round" />
           </svg>
         </span>
-        <span class="brand__name">New Shivam<br />Medicos</span>
+        <span class="brand__text">
+          <span class="brand__name">New Shivam Medicos</span>
+          <small>Pharmacy &amp; ERP</small>
+        </span>
       </RouterLink>
 
       <nav class="side-nav" aria-label="Admin">
@@ -59,22 +62,30 @@
               stroke-linejoin="round"
             />
           </svg>
-          <span class="side-nav__text">
-            <span class="side-nav__label">
-              {{ item.label }}
-              <svg v-if="item.crown" class="crown" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-                <path d="M4 17h16l-1.2-8-4.3 3.2L12 6l-2.5 6.2L5.2 9 4 17z" fill="currentColor" />
-              </svg>
-            </span>
-            <small v-if="item.note">{{ item.note }}</small>
+          <span class="side-nav__label">{{ item.label }}</span>
+          <span v-if="item.crown" class="owner-pill">
+            <svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true">
+              <path d="M4 17h16l-1.2-8-4.3 3.2L12 6l-2.5 6.2L5.2 9 4 17z" fill="currentColor" />
+            </svg>
+            Owner
           </span>
+          <span v-else-if="isActive(item)" class="side-nav__dot" aria-hidden="true"></span>
         </RouterLink>
       </nav>
 
       <footer class="side-foot">
-        <strong>{{ accountName }}</strong>
-        <span>{{ accountDetail }}</span>
+        <div class="side-foot__who">
+          <span class="side-foot__avatar" aria-hidden="true">{{ accountInitials }}</span>
+          <span class="side-foot__text">
+            <small v-if="accountRole">{{ accountRole }}</small>
+            <strong>{{ accountName }}</strong>
+            <span>{{ accountDetail }}</span>
+          </span>
+        </div>
         <button v-if="session.status === 'authenticated'" class="side-foot__out" type="button" :disabled="session.loggingOut" @click="signOut">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path d="M14 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 16l-4-4 4-4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
           {{ session.loggingOut ? "Signing out…" : "Sign out" }}
         </button>
         <p v-if="logoutError" class="side-foot__error" role="alert">{{ logoutError }}</p>
@@ -101,6 +112,7 @@
 
 <script>
 import { logout, retrySession, session } from "../../auth";
+import { roleLabel } from "../../data/users";
 
 const NAV = [
   {
@@ -143,7 +155,6 @@ const NAV = [
     label: "Users",
     to: "/admin/users",
     match: "/admin/users",
-    note: "Owner only",
     crown: true,
     ownerOnly: true,
     icon: "M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
@@ -168,6 +179,17 @@ export default {
     },
     accountName() {
       return (this.session.user && this.session.user.name) || "New Shivam Medicos";
+    },
+    accountInitials() {
+      const words = this.accountName.trim().split(/\s+/).filter(Boolean);
+      if (!words.length) return "?";
+      if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+      return (words[0][0] + words[1][0]).toUpperCase();
+    },
+    accountRole() {
+      const role = this.session.user && this.session.user.role;
+      if (role === "OWNER") return "Store owner";
+      return role ? roleLabel(role) : "";
     },
     accountDetail() {
       if (this.session.user && this.session.user.email) return this.session.user.email;
@@ -231,13 +253,13 @@ export default {
 }
 
 .admin__side {
-  width: 300px;
+  width: 250px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-right: 1px solid var(--admin-line);
-  padding: 1.25rem 1.25rem;
+  border-right: 1px solid #eef1f4;
+  padding: 0 0.75rem;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -247,9 +269,29 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.25rem 0.6rem 1.35rem;
   color: var(--admin-ink);
   text-decoration: none;
+}
+
+.admin__side .brand {
+  margin: 0 -0.75rem 0.75rem;
+  padding: 1.1rem 1rem 1rem 1.15rem;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.brand__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand__text small {
+  margin-top: 0.15rem;
+  color: #94a3b8;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .brand__mark {
@@ -281,81 +323,128 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.68rem 0.8rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid transparent;
   border-radius: 10px;
   color: #475569;
   text-decoration: none;
-  font-size: 0.925rem;
+  font-size: 0.86rem;
   font-weight: 500;
 }
 
 .side-nav__link:hover {
-  background: #f4fbfa;
+  background: #f6f9fa;
   color: var(--admin-teal-dark);
 }
 
 .side-nav__link.is-active {
-  background: #e7f6f3;
-  color: var(--admin-teal);
+  border-color: #cdeae4;
+  background: #eef8f5;
+  color: #0f5f58;
   font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--admin-teal);
 }
 
-.side-nav__text {
+.side-nav__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-nav__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #14b8a6;
+}
+
+.owner-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid #f6dfae;
+  border-radius: 6px;
+  background: #fff8e8;
+  color: #b45309;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.side-foot {
+  margin: auto -0.75rem 0;
+  padding: 0.9rem 0.75rem 0.9rem;
+  border-top: 1px solid #eef1f4;
+  background: #fafbfc;
+}
+
+.side-foot__who {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.15rem;
+}
+
+.side-foot__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  background: #eef2f6;
+  color: #334155;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.side-foot__text {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.side-nav__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+.side-foot__text small {
+  color: #64748b;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.side-nav__text small {
+.side-foot__text strong {
+  font-size: 0.84rem;
+  line-height: 1.3;
+}
+
+.side-foot__text span {
+  overflow: hidden;
   color: #94a3b8;
   font-size: 0.72rem;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.crown {
-  color: #d97706;
-  flex-shrink: 0;
-}
-
-.side-foot {
-  margin-top: auto;
-  padding: 1rem 0.8rem 0.15rem;
-  border-top: 1px solid var(--admin-line);
-}
-
-.side-foot strong,
-.side-foot span {
-  display: block;
-}
-
-.side-foot strong {
-  font-size: 0.9rem;
-}
-
-.side-foot span {
-  margin-top: 0.15rem;
-  color: var(--admin-muted);
-  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .side-foot__out {
-  margin-top: 0.7rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--admin-teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.side-foot__out:hover:not(:disabled) {
+  border-color: #b7dcd5;
+  color: var(--admin-teal);
 }
 
 .side-foot__out:disabled {

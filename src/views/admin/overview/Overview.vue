@@ -1,13 +1,32 @@
 <template>
   <section class="page">
     <header class="head">
-      <div>
-        <h1>Overview</h1>
-        <p>Purchase and payment summary</p>
+      <div class="head__title">
+        <div class="head__row">
+          <h1>Overview</h1>
+          <span class="fy-pill">
+            <span class="range__dot" aria-hidden="true"></span>
+            {{ fyPillLabel }}
+          </span>
+        </div>
+        <p>Purchase and payment summary for the selected financial year</p>
       </div>
       <div class="period">
+        <span class="range">
+          <span class="range__dot" aria-hidden="true"></span>
+          <svg class="range__cal" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+          </svg>
+          {{ rangeLabel }}
+        </span>
         <label class="year">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
             <path
               d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"
               fill="none"
@@ -18,144 +37,261 @@
           </svg>
           <span class="sr-only">Financial year</span>
           <select v-model.number="financialYearStart">
-            <option v-for="item in financialYears" :key="item.value" :value="item.value">{{ item.label }}</option>
+            <option v-for="item in financialYears" :key="item.value" :value="item.value">FY {{ item.label }}</option>
           </select>
+          <svg class="year__chevron" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
         </label>
-        <p class="range">
-          <strong>Financial year</strong>
-          <span>{{ rangeLabel }}</span>
-        </p>
       </div>
+      <button class="refresh" type="button" :disabled="refreshing" aria-label="Refresh overview" @click="refresh">
+        <svg :class="{ spin: refreshing }" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
     </header>
 
-    <p v-if="summaryLoading" class="status">Loading overview…</p>
-    <p v-if="summaryError" class="status status--error" role="alert">{{ summaryError }}</p>
-    <p v-if="error" class="status status--error" role="alert">{{ error }}</p>
+    <div class="body">
+      <p v-if="summaryLoading" class="status">Loading overview…</p>
+      <p v-if="summaryError" class="status status--error" role="alert">{{ summaryError }}</p>
+      <p v-if="error" class="status status--error" role="alert">{{ error }}</p>
 
-    <div class="stats">
-      <article class="stat stat--purchase">
-        <span class="stat__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <path d="M6 7h15l-1.5 9h-12L6 7zM6 7 5 4H2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-            <path d="M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor" />
-          </svg>
-        </span>
-        <span>Total purchases</span>
-        <strong>{{ formatInr(totals.purchases) }}</strong>
-        <small>This financial year</small>
-      </article>
-      <article class="stat stat--payment">
-        <span class="stat__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <path d="M3 7h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7zM3 10h18M7 15h4" fill="none" stroke="currentColor" stroke-width="1.7" />
-          </svg>
-        </span>
-        <span>Total payments</span>
-        <strong>{{ formatInr(totals.payments) }}</strong>
-        <small>This financial year</small>
-      </article>
-      <article class="stat stat--due">
-        <span class="stat__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <path d="M12 4 3 18h18L12 4zM12 10v4M12 16.5v.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-          </svg>
-        </span>
-        <span>Outstanding dues</span>
-        <strong>{{ formatInr(totals.dues) }}</strong>
-        <small>Across wholesalers</small>
-      </article>
-      <article class="stat stat--opening">
-        <span class="stat__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <path d="M4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9zM3 10l2.2-4h13.6L21 10M12 13v4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-          </svg>
-        </span>
-        <span>Opening balance</span>
-        <strong>{{ formatInr(totals.opening) }}</strong>
-        <small>Start of the year</small>
-      </article>
-    </div>
+      <div class="stats">
+        <article class="stat stat--purchase">
+          <div class="stat__top">
+            <span class="stat__label"><span class="stat__long">Total </span>purchases</span>
+            <span class="stat__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path d="M3 4h2.2l2.1 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.76L20 8H6.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="9.5" cy="19" r="1.4" fill="currentColor" />
+                <circle cx="17" cy="19" r="1.4" fill="currentColor" />
+              </svg>
+            </span>
+          </div>
+          <strong class="stat__value">{{ formatInr(totals.purchases) }}</strong>
+          <p class="stat__sub">This financial year</p>
+          <footer class="stat__foot">
+            <span>This financial year</span>
+            <span class="chip chip--teal">{{ isCurrentYear ? "Active FY" : `FY ${financialYearStart}` }}</span>
+          </footer>
+        </article>
 
-    <div class="actions">
-      <RouterLink class="btn-add" to="/admin/purchase-bills/new">+ Add purchase bill</RouterLink>
-      <RouterLink class="btn-record" to="/admin/payments/new">Record payment</RouterLink>
-    </div>
-
-    <section class="summary">
-      <header class="summary__head">
-        <h2>Wholesaler summary</h2>
-        <RouterLink to="/admin/wholesalers">View all wholesalers →</RouterLink>
-      </header>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Wholesaler</th>
-              <th scope="col">Opening balance</th>
-              <th scope="col">Purchases</th>
-              <th scope="col">Payments</th>
-              <th scope="col">Outstanding dues</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="loading">
-              <td colspan="5" class="empty">Loading wholesalers…</td>
-            </tr>
-            <tr v-else-if="!rows.length && !error">
-              <td colspan="5" class="empty">No wholesalers yet.</td>
-            </tr>
-            <template v-else>
-              <tr v-for="item in rows" :key="item.wholesalerId">
-                <td>
-                  <RouterLink class="name" :to="`/admin/wholesalers/${item.wholesalerId}`">{{ item.wholesalerName }}</RouterLink>
-                </td>
-                <td>{{ formatInr(item.openingDue) }}</td>
-                <td>{{ formatInr(item.totalPurchases) }}</td>
-                <td>{{ formatInr(item.totalPayments) }}</td>
-                <td :class="{ due: Number(item.currentDue) > 0 }">{{ formatInr(item.currentDue) }}</td>
-              </tr>
+        <article class="stat stat--payment">
+          <div class="stat__top">
+            <span class="stat__label"><span class="stat__long">Total </span>payments</span>
+            <span class="stat__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <rect x="3" y="5.5" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" />
+                <path d="M3 10h18M7 15h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </span>
+          </div>
+          <strong class="stat__value">{{ formatInr(totals.payments) }}</strong>
+          <p class="stat__sub">
+            <template v-if="clearedPercent !== null">
+              <span class="stat__dot" aria-hidden="true"></span>
+              {{ clearedPercent }}% cleared
             </template>
-          </tbody>
-        </table>
+            <template v-else>This financial year</template>
+          </p>
+          <footer class="stat__foot">
+            <span>This financial year</span>
+            <span v-if="clearedPercent !== null" class="chip chip--blue">{{ clearedPercent }}% cleared</span>
+          </footer>
+        </article>
+
+        <article class="stat stat--due" :class="{ 'stat--due-clear': totals.dues <= 0 }">
+          <div class="stat__top">
+            <span class="stat__label">
+              <span class="stat__long">Outstanding dues</span>
+              <span class="stat__short">Total dues</span>
+            </span>
+            <span class="stat__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path d="M10.3 4.2 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                <path d="M12 9.5v4M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </span>
+          </div>
+          <strong class="stat__value">{{ formatInr(totals.dues) }}</strong>
+          <p class="stat__sub">{{ totals.dues > 0 ? "Across wholesalers" : "All settled" }}</p>
+          <footer class="stat__foot">
+            <span>Across wholesalers</span>
+            <span class="chip" :class="totals.dues > 0 ? 'chip--amber' : 'chip--teal'">
+              {{ totals.dues > 0 ? "Action required" : "All settled" }}
+            </span>
+          </footer>
+        </article>
+
+        <article class="stat stat--opening">
+          <div class="stat__top">
+            <span class="stat__label">Opening<span class="stat__long"> balance</span></span>
+            <span class="stat__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path d="M12 6.5C10.3 5.2 7.9 4.5 3.5 4.5v13c4.4 0 6.8.7 8.5 2 1.7-1.3 4.1-2 8.5-2v-13c-4.4 0-6.8.7-8.5 2zM12 6.5v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </div>
+          <strong class="stat__value">{{ formatInr(totals.opening) }}</strong>
+          <p class="stat__sub">Brought forward</p>
+          <footer class="stat__foot">
+            <span>Start of the year</span>
+            <span class="chip chip--grey">Brought forward</span>
+          </footer>
+        </article>
       </div>
 
-      <ul class="cards">
-        <li v-if="loading" class="card empty">Loading wholesalers…</li>
-        <li v-else-if="!rows.length && !error" class="card empty">No wholesalers yet.</li>
-        <template v-else>
-          <li v-for="item in rows" :key="item.wholesalerId" class="card">
-            <RouterLink class="name" :to="`/admin/wholesalers/${item.wholesalerId}`">{{ item.wholesalerName }}</RouterLink>
-            <dl>
-              <div>
-                <dt>Opening balance</dt>
-                <dd>{{ formatInr(item.openingDue) }}</dd>
-              </div>
-              <div>
-                <dt>Purchases</dt>
-                <dd>{{ formatInr(item.totalPurchases) }}</dd>
-              </div>
-              <div>
-                <dt>Payments</dt>
-                <dd>{{ formatInr(item.totalPayments) }}</dd>
-              </div>
-              <div>
-                <dt>Due</dt>
-                <dd :class="{ due: Number(item.currentDue) > 0 }">{{ formatInr(item.currentDue) }}</dd>
-              </div>
-            </dl>
-          </li>
-        </template>
-      </ul>
-    </section>
+      <div class="actions">
+        <RouterLink class="btn-add" to="/admin/purchase-bills/new">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle class="btn-add__ring" cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7" />
+            <path d="M12 7.5v9M7.5 12h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          Add purchase bill
+        </RouterLink>
+        <RouterLink class="btn-record" to="/admin/payments/new">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.7" />
+            <path d="M14.5 9.2c-.4-.8-1.3-1.2-2.5-1.2-1.5 0-2.5.8-2.5 1.9 0 2.6 5.2 1.4 5.2 4.1 0 1.1-1.1 2-2.7 2-1.3 0-2.3-.5-2.7-1.4M12 6.5V8M12 16v1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          Record payment
+        </RouterLink>
+      </div>
 
-    <p class="note">The wholesaler table shows each wholesaler’s current balance.</p>
+      <section class="summary">
+        <header class="summary__head">
+          <div>
+            <h2>Wholesaler summary</h2>
+            <p>Ledger balances, purchases and settlements by wholesaler</p>
+          </div>
+          <RouterLink class="summary__all" to="/admin/wholesalers">
+            View all wholesalers
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </RouterLink>
+        </header>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Wholesaler</th>
+                <th scope="col" class="num">Opening balance</th>
+                <th scope="col" class="num">Purchases</th>
+                <th scope="col" class="num">Payments</th>
+                <th scope="col" class="num">Outstanding dues</th>
+                <th scope="col" class="act">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="loading">
+                <td colspan="6" class="empty">Loading wholesalers…</td>
+              </tr>
+              <tr v-else-if="!rows.length && !error">
+                <td colspan="6" class="empty">No wholesalers yet.</td>
+              </tr>
+              <template v-else>
+                <tr v-for="item in visibleRows" :key="item.wholesalerId">
+                  <td>
+                    <div class="who">
+                      <span class="avatar" :class="`avatar--${item.tone}`" aria-hidden="true">{{ item.initials }}</span>
+                      <span class="who__text">
+                        <RouterLink class="name" :to="`/admin/wholesalers/${item.wholesalerId}`">{{ item.wholesalerName }}</RouterLink>
+                        <small v-if="item.detail">{{ item.detail }}</small>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="num muted">{{ formatInr(item.openingDue) }}</td>
+                  <td class="num strong">{{ formatInr(item.totalPurchases) }}</td>
+                  <td class="num paid">{{ formatInr(item.totalPayments) }}</td>
+                  <td class="num">
+                    <span v-if="item.due > 0" class="badge badge--due">{{ formatInr(item.due) }}</span>
+                    <span v-else class="badge badge--clear">
+                      <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+                        <path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      Settled
+                    </span>
+                  </td>
+                  <td class="act">
+                    <RouterLink v-if="item.due > 0" class="row-btn row-btn--pay" :to="`/admin/payments/new?wholesalerId=${item.wholesalerId}`">
+                      Pay now
+                    </RouterLink>
+                    <RouterLink v-else class="row-btn" :to="`/admin/wholesalers/${item.wholesalerId}`">Ledger</RouterLink>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="cards">
+          <li v-if="loading" class="card empty">Loading wholesalers…</li>
+          <li v-else-if="!rows.length && !error" class="card empty">No wholesalers yet.</li>
+          <template v-else>
+            <li v-for="item in visibleRows" :key="item.wholesalerId" class="card">
+              <div class="card__top">
+                <div class="who">
+                  <span class="avatar" :class="`avatar--${item.tone}`" aria-hidden="true">{{ item.initials }}</span>
+                  <span class="who__text">
+                    <RouterLink class="name" :to="`/admin/wholesalers/${item.wholesalerId}`">{{ item.wholesalerName }}</RouterLink>
+                    <small v-if="item.detail">{{ item.detail }}</small>
+                  </span>
+                </div>
+                <span v-if="item.due > 0" class="badge badge--due">{{ formatInr(item.due) }}</span>
+                <span v-else class="badge badge--clear">Settled</span>
+              </div>
+              <dl>
+                <div>
+                  <dt>Opening</dt>
+                  <dd>{{ formatInr(item.openingDue) }}</dd>
+                </div>
+                <div>
+                  <dt>Purchases</dt>
+                  <dd>{{ formatInr(item.totalPurchases) }}</dd>
+                </div>
+                <div>
+                  <dt>Payments</dt>
+                  <dd class="paid">{{ formatInr(item.totalPayments) }}</dd>
+                </div>
+              </dl>
+              <RouterLink v-if="item.due > 0" class="row-btn row-btn--pay row-btn--block" :to="`/admin/payments/new?wholesalerId=${item.wholesalerId}`">
+                Pay now
+              </RouterLink>
+              <RouterLink v-else class="row-btn row-btn--block" :to="`/admin/wholesalers/${item.wholesalerId}`">View ledger</RouterLink>
+            </li>
+          </template>
+        </ul>
+
+        <footer class="summary__foot">
+          <p>
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.7" />
+              <path d="M12 11v5M12 8h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+            </svg>
+            Wholesalers with the highest outstanding dues are listed first.
+          </p>
+          <span v-if="rows.length">Showing {{ visibleRows.length }} of {{ rows.length }} wholesalers</span>
+        </footer>
+      </section>
+    </div>
   </section>
 </template>
 
 <script>
 import { fetchOverallSummary } from "../../../data/reports";
-import { fetchOutstandingDues, formatInr } from "../../../data/wholesalers";
+import { currentDue, fetchOutstandingDues, fetchWholesalers, formatInr, formatPhone } from "../../../data/wholesalers";
+
+const SUMMARY_LIMIT = 6;
+const TONES = ["teal", "orange", "blue", "violet", "rose", "amber"];
 
 function currentFinancialYearStart(date) {
   const year = date.getFullYear();
@@ -177,15 +313,44 @@ function formatIsoDay(value) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
 }
 
+function initials(name) {
+  const words = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+function toneFor(name) {
+  let hash = 0;
+  const text = String(name || "");
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  return TONES[hash % TONES.length];
+}
+
+function rowDue(item) {
+  if (item.currentDue !== undefined && item.currentDue !== null && item.currentDue !== "") return Number(item.currentDue) || 0;
+  return currentDue(item);
+}
+
+function contactLine(wholesaler) {
+  if (!wholesaler) return "";
+  const gst = wholesaler.gstNumber || wholesaler.gstin || wholesaler.gst;
+  if (gst) return `GST: ${gst}`;
+  const phone = formatPhone(wholesaler.phone);
+  return phone ? `Ph: ${phone}` : "";
+}
+
 export default {
   name: "AdminOverview",
   data() {
     const financialYearStart = currentFinancialYearStart(new Date());
     return {
       financialYearStart,
+      currentYearStart: financialYearStart,
       financialYears: financialYearOptions(financialYearStart),
       summary: null,
       dues: [],
+      wholesalers: [],
       summaryLoading: false,
       loading: false,
       summaryError: "",
@@ -193,6 +358,17 @@ export default {
     };
   },
   computed: {
+    isCurrentYear() {
+      return this.financialYearStart === this.currentYearStart;
+    },
+    fyPillLabel() {
+      const start = String(this.financialYearStart).slice(-2);
+      const end = String(this.financialYearStart + 1).slice(-2);
+      return `${this.isCurrentYear ? "Active FY" : "FY"} ${start}–${end}`;
+    },
+    refreshing() {
+      return this.loading || this.summaryLoading;
+    },
     rangeLabel() {
       const summary = this.summary;
       const through = summary && (summary.asOfDate || summary.endDate);
@@ -202,7 +378,19 @@ export default {
       return `1 Apr ${this.financialYearStart} – 31 Mar ${this.financialYearStart + 1}`;
     },
     rows() {
-      return [...this.dues].sort((a, b) => String(a.wholesalerName || "").localeCompare(String(b.wholesalerName || "")));
+      const byId = new Map(this.wholesalers.map((item) => [String(item.id), item]));
+      return this.dues
+        .map((item) => ({
+          ...item,
+          due: rowDue(item),
+          initials: initials(item.wholesalerName),
+          tone: toneFor(item.wholesalerName),
+          detail: contactLine(byId.get(String(item.wholesalerId))),
+        }))
+        .sort((a, b) => b.due - a.due || String(a.wholesalerName || "").localeCompare(String(b.wholesalerName || "")));
+    },
+    visibleRows() {
+      return this.rows.slice(0, SUMMARY_LIMIT);
     },
     totals() {
       const summary = this.summary || {};
@@ -213,6 +401,11 @@ export default {
         opening: Number(summary.openingBalance) || 0,
       };
     },
+    clearedPercent() {
+      const owed = this.totals.opening + this.totals.purchases;
+      if (owed <= 0) return null;
+      return Math.min(100, Math.round((this.totals.payments / owed) * 100));
+    },
   },
   watch: {
     financialYearStart: {
@@ -222,19 +415,24 @@ export default {
       },
     },
   },
-  async created() {
-    this.loading = true;
-    this.error = "";
-    try {
-      this.dues = await fetchOutstandingDues();
-    } catch (err) {
-      this.error = err.message || "Could not load wholesalers.";
-    } finally {
-      this.loading = false;
-    }
+  created() {
+    this.loadWholesalers();
   },
   methods: {
     formatInr,
+    refresh() {
+      this.loadSummary();
+      this.loadWholesalers();
+    },
+    async loadWholesalers() {
+      this.loading = true;
+      this.error = "";
+      const [dues, wholesalers] = await Promise.allSettled([fetchOutstandingDues(), fetchWholesalers()]);
+      if (dues.status === "fulfilled") this.dues = dues.value;
+      else this.error = dues.reason.message || "Could not load wholesalers.";
+      if (wholesalers.status === "fulfilled") this.wholesalers = wholesalers.value;
+      this.loading = false;
+    },
     async loadSummary() {
       const year = this.financialYearStart;
       this.summaryLoading = true;
@@ -257,78 +455,161 @@ export default {
 
 <style scoped>
 .page {
-  max-width: 1100px;
-  padding: 1.5rem 1.75rem 2.5rem;
+  min-height: 100vh;
+  background: #f6f8fa;
+  color: #0f172a;
 }
 
-.head,
-.summary__head,
-.card__top,
-.actions {
+.head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 1.1rem 1.6rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.head__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.head__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.fy-pill,
+.range__cal,
+.stat__short,
+.stat__sub,
+.btn-add__ring {
+  display: none;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.7rem;
-  letter-spacing: -0.03em;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
-.head p,
-.note,
-.empty,
-.range span,
-.stat small {
-  margin: 0.3rem 0 0;
+.head p {
+  margin: 0.2rem 0 0;
   color: #64748b;
-  font-size: 0.92rem;
+  font-size: 0.84rem;
 }
 
 .period {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.55rem;
+}
+
+.range {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.75rem;
+  border-radius: 8px;
+  background: #eef7f5;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.range__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #14b8a6;
 }
 
 .year {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  gap: 0.45rem;
+  padding: 0 0.7rem;
+  height: 34px;
+  border: 1px solid #dfe5eb;
+  border-radius: 9px;
   background: #fff;
-  color: #0f172a;
-  padding: 0.45rem 0.7rem;
+  color: #334155;
 }
 
 .year select {
+  appearance: none;
+  padding-right: 1.1rem;
   border: 0;
   background: transparent;
+  color: #0f172a;
   font: inherit;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: inherit;
+  cursor: pointer;
 }
 
 .year select:focus {
   outline: none;
 }
 
-.head .range {
-  margin: 0;
-  text-align: right;
+.year:focus-within {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
-.range strong {
-  display: block;
-  font-size: 0.92rem;
+.year__chevron {
+  position: absolute;
+  right: 0.6rem;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.refresh {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #dfe5eb;
+  border-radius: 9px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.refresh:hover:not(:disabled) {
+  color: #0f766e;
+  border-color: #b7dcd5;
+}
+
+.refresh:disabled {
+  cursor: default;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.body {
+  max-width: 1180px;
+  padding: 1.6rem 1.6rem 2.5rem;
 }
 
 .status {
-  margin: 1rem 0 0;
+  margin: 0 0 0.9rem;
   color: #64748b;
+  font-size: 0.88rem;
   font-weight: 600;
 }
 
@@ -338,115 +619,251 @@ h1 {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  margin-top: 1.1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
 }
 
 .stat {
-  border-radius: 14px;
-  padding: 0.95rem 1rem 1rem;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 132px;
+  padding: 1.05rem 1.05rem 0.9rem;
+  border: 1px solid #e8edf1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
-.stat span,
-.stat small {
-  color: inherit;
-  opacity: 0.8;
+.stat::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  bottom: -34px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--stat-soft);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
-.stat strong {
-  margin-top: 0.55rem;
-  font-size: 1.35rem;
-  letter-spacing: -0.03em;
+.stat__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stat__label {
+  padding-top: 0.25rem;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .stat__icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.55rem;
-  background: rgba(255, 255, 255, 0.7);
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--stat-soft);
+  color: var(--stat-ink);
 }
 
-.stat--purchase {
-  background: #ecfdf5;
+.stat__value {
+  margin: 0.55rem 0 0.9rem;
+  color: var(--stat-value, #0f172a);
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.stat__foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eef1f4;
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.chip {
+  flex: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip--teal {
+  background: #e6f6f2;
   color: #0f766e;
 }
 
-.stat--payment {
-  background: #eff6ff;
+.chip--blue {
+  background: #eaf1ff;
   color: #1d4ed8;
 }
 
+.chip--amber {
+  background: #fdecc8;
+  color: #9a4b07;
+}
+
+.chip--grey {
+  background: #f1f4f7;
+  color: #64748b;
+}
+
+.stat--purchase {
+  --stat-soft: #e6f6f2;
+  --stat-ink: #0f766e;
+}
+
+.stat--payment {
+  --stat-soft: #eaf1ff;
+  --stat-ink: #1d4ed8;
+  --stat-value: #1e3a8a;
+}
+
 .stat--due {
-  background: #fff7ed;
-  color: #c2410c;
+  --stat-soft: #fdecc8;
+  --stat-ink: #b45309;
+  --stat-value: #b45309;
+  border-color: #f6dfae;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff 70%);
+}
+
+.stat--due .stat__label {
+  color: #b45309;
+}
+
+.stat--due .stat__foot {
+  border-top-color: #f6e6c4;
+}
+
+.stat--due-clear {
+  --stat-soft: #e6f6f2;
+  --stat-ink: #0f766e;
+  --stat-value: #0f172a;
+  border-color: #e8edf1;
+  background: #fff;
+}
+
+.stat--due-clear .stat__label {
+  color: #475569;
 }
 
 .stat--opening {
-  background: #f0fdf4;
-  color: #166534;
+  --stat-soft: #eef1f5;
+  --stat-ink: #1e293b;
 }
 
 .actions {
-  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
 }
 
 .btn-add,
-.btn-record,
-.btn-view {
-  border-radius: 8px;
-  padding: 0.7rem 1rem;
+.btn-record {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  height: 46px;
+  border-radius: 10px;
+  font-size: 0.92rem;
   font-weight: 600;
   text-decoration: none;
-  text-align: center;
 }
 
 .btn-add {
-  flex: 1;
   background: #0f766e;
   color: #fff;
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.18);
 }
 
 .btn-add:hover {
-  background: #115e59;
+  background: #0c645d;
+  color: #fff;
 }
 
 .btn-record {
-  flex: 1;
-  border: 1px solid #99f6e4;
+  border: 1.5px solid #9fd5cb;
   background: #fff;
-  color: #0f766e;
+  color: #0f5f58;
+}
+
+.btn-record:hover {
+  background: #f2fbf9;
+  color: #0f5f58;
 }
 
 .summary {
   margin-top: 1.4rem;
+  overflow: hidden;
+  border: 1px solid #e8edf1;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.summary__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 1rem;
 }
 
 .summary h2 {
   margin: 0;
   font-size: 1.05rem;
+  font-weight: 600;
 }
 
-.summary__head a {
-  color: #0f766e;
+.summary__head p {
+  margin: 0.15rem 0 0;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.summary__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: none;
+  padding: 0.42rem 0.7rem;
+  border: 1px solid #cdeae4;
+  border-radius: 8px;
+  background: #f0faf7;
+  color: #0f5f58;
+  font-size: 0.76rem;
   font-weight: 600;
   text-decoration: none;
-  font-size: 0.92rem;
 }
 
-.table-wrap,
-.card {
-  margin-top: 0.75rem;
-  background: #fff;
-  border: 1px solid #e6eeec;
-  border-radius: 14px;
+.summary__all:hover {
+  background: #e3f5f0;
+  color: #0f5f58;
+}
+
+.table-wrap {
+  overflow-x: auto;
 }
 
 table {
@@ -456,68 +873,240 @@ table {
 
 th,
 td {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid #eef1f4;
   text-align: left;
-  padding: 0.9rem 1rem;
-  border-bottom: 1px solid #eef3f2;
-  font-size: 0.92rem;
+  font-size: 0.86rem;
+  white-space: nowrap;
 }
 
 th {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  background: #f8fafb;
   color: #64748b;
-  font-size: 0.78rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.num {
+  text-align: right;
+}
+
+.act {
+  text-align: center;
+}
+
+tbody tr:hover td {
+  background: #fbfcfd;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.who__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.who__text small {
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.avatar--teal {
+  background: #e3f6ef;
+  color: #0f766e;
+}
+
+.avatar--orange {
+  background: #fdeee2;
+  color: #c2410c;
+}
+
+.avatar--blue {
+  background: #e7f0fd;
+  color: #1d4ed8;
+}
+
+.avatar--violet {
+  background: #f1eafd;
+  color: #6d28d9;
+}
+
+.avatar--rose {
+  background: #fde8ec;
+  color: #be123c;
+}
+
+.avatar--amber {
+  background: #fdf3d8;
+  color: #a16207;
 }
 
 .name {
   color: #0f172a;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
 }
 
-.due {
-  color: #c2410c;
-  font-weight: 700;
+.name:hover {
+  color: #0f766e;
 }
 
-.btn-view {
+.muted {
+  color: #475569;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.paid {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.badge {
   display: inline-flex;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #0f172a;
-  padding: 0.35rem 0.7rem;
-  font-size: 0.85rem;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
-.note {
-  margin-top: 0.8rem;
+.badge--due {
+  border: 1px solid #f6d79a;
+  background: #fff6e2;
+  color: #b45309;
+}
+
+.badge--clear {
+  border: 1px solid #bfe6d7;
+  background: #ecf8f3;
+  color: #0f766e;
+}
+
+.row-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 0.38rem 0.7rem;
+  border: 1px solid #dfe5eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.row-btn:hover {
+  border-color: #b7dcd5;
+  color: #0f766e;
+}
+
+.row-btn--pay {
+  color: #0f5f58;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.summary__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.25rem;
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.summary__foot p {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.summary__foot span {
+  color: #334155;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 1.5rem 1.25rem;
+  color: #64748b;
+  text-align: center;
 }
 
 .cards {
   display: none;
-  list-style: none;
-  margin: 0.75rem 0 0;
-  padding: 0;
+  flex-direction: column;
   gap: 0.75rem;
+  margin: 0;
+  padding: 0 1rem 0.5rem;
+  list-style: none;
 }
 
 .card {
-  padding: 0.95rem 1rem;
+  padding: 0.9rem;
+  border: 1px solid #eef1f4;
+  border-radius: 12px;
+}
+
+.card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
 
 .card dl {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.65rem 1rem;
-  margin: 0.75rem 0 0;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.8rem 0;
 }
 
 .card dt {
-  color: #64748b;
-  font-size: 0.78rem;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .card dd {
   margin: 0.15rem 0 0;
-  font-weight: 700;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.row-btn--block {
+  width: 100%;
+  padding: 0.55rem;
 }
 
 .sr-only {
@@ -531,35 +1120,224 @@ th {
   border: 0;
 }
 
+@media (max-width: 1100px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 800px) {
   .page {
-    padding: 1rem;
+    background: #f6f8fa;
   }
 
   .head {
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title refresh"
+      "period period";
+    align-items: start;
+    gap: 0.9rem 0.75rem;
+    padding: 1.1rem 1rem 0;
+    background: transparent;
+    border-bottom: 0;
   }
 
-  .period,
-  .actions {
-    align-items: center;
-  }
-
-  .range {
-    text-align: right;
+  .head__title {
+    grid-area: title;
   }
 
   h1 {
-    font-size: 1.45rem;
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+
+  .head p {
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .fy-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: #e6f6f2;
+    color: #0f766e;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .refresh {
+    grid-area: refresh;
+    width: 40px;
+    height: 40px;
+    border-color: #e1ece9;
+    border-radius: 12px;
+    background: #eef7f5;
+    color: #0f766e;
+  }
+
+  .period {
+    grid-area: period;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.45rem 0.45rem 0.8rem;
+    border: 1px solid #e1ece9;
+    border-radius: 14px;
+    background: #f0f8f6;
+  }
+
+  .range {
+    gap: 0.55rem;
+    padding: 0;
+    background: transparent;
+    color: #0f172a;
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  .range .range__dot,
+  .year > svg:first-child {
+    display: none;
+  }
+
+  .range__cal {
+    display: block;
+    flex: none;
+    color: #0f766e;
+  }
+
+  .year {
+    height: 36px;
+    padding: 0 0.6rem;
+    border-color: transparent;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+
+  .year select {
+    color: #0f5f58;
+    font-size: 0.84rem;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1rem 2rem;
+  }
+
+  .status {
+    order: 0;
+  }
+
+  .actions {
+    order: 1;
+    gap: 0.75rem;
+    margin: 0 0 1rem;
   }
 
   .stats {
-    grid-template-columns: 1fr 1fr;
+    order: 2;
+    gap: 0.75rem;
   }
 
-  .stat strong {
-    font-size: 1.15rem;
+  .summary {
+    order: 3;
+  }
+
+  .btn-add,
+  .btn-record {
+    height: 50px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .btn-add__ring {
+    display: inline;
+  }
+
+  .btn-record {
+    border: 1px solid #e1ece9;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .stat {
+    padding: 1rem 0.95rem;
+    border-radius: 16px;
+  }
+
+  .stat::after,
+  .stat__foot {
+    display: none;
+  }
+
+  .stat__top {
+    align-items: center;
+  }
+
+  .stat__label {
+    padding-top: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .stat__long {
+    display: none;
+  }
+
+  .stat__short {
+    display: inline;
+  }
+
+  .stat__icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .stat__value {
+    margin: 0.75rem 0 0.3rem;
+    font-size: clamp(1.3rem, 6.4vw, 1.75rem);
+    font-weight: 800;
+  }
+
+  .stat__sub {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .stat--purchase .stat__sub {
+    color: #0f766e;
+  }
+
+  .stat--due .stat__sub {
+    color: #b45309;
+  }
+
+  .stat--due-clear .stat__sub {
+    color: #0f766e;
+  }
+
+  .stat--due:not(.stat--due-clear) {
+    background: #fff8ea;
+  }
+
+  .stat__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--stat-ink);
   }
 
   .table-wrap {
@@ -568,105 +1346,32 @@ th {
 
   .cards {
     display: flex;
-    flex-direction: column;
   }
 
-  .summary__head {
-    align-items: center;
+  .summary__foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
   }
 }
 
-@media (max-width: 420px) {
-  .page {
-    padding: 0.85rem 0.75rem 1.5rem;
-  }
-
-  .period {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.55rem;
-  }
-
-  .year {
-    width: 100%;
-  }
-
-  .year select {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .head .range {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    text-align: left;
-  }
-
-  .range strong {
-    display: inline;
-    flex: none;
-  }
-
-  .head .range span {
-    margin: 0;
-    font-size: 0.8rem;
-    white-space: nowrap;
-  }
-
-  .stats {
-    gap: 0.55rem;
-  }
-
-  .stat {
-    min-height: 0;
-    padding: 0.75rem 0.7rem 0.85rem;
-  }
-
-  .stat > span {
-    font-size: 0.78rem;
-    line-height: 1.25;
-  }
-
-  .stat strong {
-    margin-top: 0.35rem;
-    font-size: 1.02rem;
-  }
-
-  .stat small {
-    font-size: 0.75rem;
-    line-height: 1.3;
-  }
-
-  .actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
+@media (max-width: 380px) {
   .btn-add,
   .btn-record {
-    white-space: nowrap;
+    gap: 0.4rem;
+    font-size: 0.82rem;
   }
 
+  .range {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
   .summary__head {
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .summary h2 {
-    font-size: 1rem;
-  }
-
-  .summary__head a {
-    margin-left: auto;
-    font-size: 0.8rem;
-    white-space: nowrap;
-  }
-
-  .card__top {
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
   }
 }
 </style>
