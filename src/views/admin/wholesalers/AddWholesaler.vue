@@ -1,145 +1,198 @@
 <template>
   <section class="page">
-    <p class="crumb">Wholesalers / Add wholesaler</p>
-    <h1>Add wholesaler</h1>
-    <p class="lead">Save supplier details and any existing dues.</p>
+    <header class="head">
+      <nav class="crumb" aria-label="Breadcrumb">
+        <RouterLink to="/admin/wholesalers">Wholesalers</RouterLink>
+        <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+          <path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span>Add wholesaler</span>
+      </nav>
+      <h1>Add wholesaler</h1>
+      <p>Save supplier details and any dues you already owe them.</p>
+    </header>
 
-    <form class="grid" novalidate @submit.prevent="onSubmit">
-      <div class="card">
-        <h2>Business details</h2>
+    <form class="body grid" novalidate @submit.prevent="onSubmit">
+      <div class="main">
+        <section class="card">
+          <header class="card__head">
+            <span class="card__icon card__icon--teal" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path d="M4 20V8l8-4 8 4v12M9 20v-6h6v6M3 20h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <div>
+              <h2>Business details</h2>
+              <p>Who you buy from and how to reach them.</p>
+            </div>
+          </header>
 
-        <label class="field" for="wholesaler-name">
-          <span>Wholesaler name <abbr title="required">*</abbr></span>
-          <input
-            id="wholesaler-name"
-            v-model.trim="form.name"
-            type="text"
-            autocomplete="organization"
-            placeholder="e.g. ABC Distributors"
-            :aria-invalid="fieldErrors.name ? 'true' : 'false'"
-            @input="clearStatus"
-          />
-          <small v-if="fieldErrors.name" class="field__error">{{ fieldErrors.name }}</small>
-        </label>
+          <div class="row">
+            <label class="field" for="wholesaler-name">
+              <span>Wholesaler name <abbr title="required">*</abbr></span>
+              <input
+                id="wholesaler-name"
+                v-model.trim="form.name"
+                type="text"
+                autocomplete="organization"
+                placeholder="e.g. ABC Distributors"
+                :aria-invalid="fieldErrors.name ? 'true' : 'false'"
+                @input="clearStatus"
+              />
+              <small v-if="fieldErrors.name" class="field__error">{{ fieldErrors.name }}</small>
+            </label>
 
-        <label class="field" for="wholesaler-phone">
-          <span>Phone number (optional)</span>
-          <div class="phone">
-            <span class="phone__code">+91</span>
-            <input
-              id="wholesaler-phone"
-              :value="form.phone"
-              type="tel"
-              inputmode="numeric"
-              autocomplete="tel-national"
-              maxlength="10"
-              :aria-invalid="fieldErrors.phone ? 'true' : 'false'"
-              @input="onPhone"
+            <label class="field" for="wholesaler-phone">
+              <span>Phone number <em>(optional)</em></span>
+              <div class="phone">
+                <span class="phone__code">+91</span>
+                <input
+                  id="wholesaler-phone"
+                  :value="form.phone"
+                  type="tel"
+                  inputmode="numeric"
+                  autocomplete="tel-national"
+                  maxlength="10"
+                  placeholder="10-digit mobile"
+                  :aria-invalid="fieldErrors.phone ? 'true' : 'false'"
+                  @input="onPhone"
+                />
+              </div>
+              <small v-if="fieldErrors.phone" class="field__error">{{ fieldErrors.phone }}</small>
+            </label>
+          </div>
+
+          <label class="field" for="wholesaler-address">
+            <span>Address <em>(optional)</em></span>
+            <textarea
+              id="wholesaler-address"
+              v-model.trim="form.address"
+              rows="3"
+              placeholder="Shop number, street, city"
+              @input="clearStatus"
             />
-          </div>
-          <small v-if="fieldErrors.phone" class="field__error">{{ fieldErrors.phone }}</small>
-        </label>
+          </label>
+        </section>
 
-        <label class="field" for="wholesaler-address">
-          <span>Address (optional)</span>
-          <textarea
-            id="wholesaler-address"
-            v-model.trim="form.address"
-            rows="3"
-            placeholder="Enter complete address (optional)"
-            @input="clearStatus"
-          />
-        </label>
+        <section class="card">
+          <header class="card__head">
+            <span class="card__icon card__icon--amber" aria-hidden="true">₹</span>
+            <div>
+              <h2>Opening balance</h2>
+              <p>Anything you owed before you started tracking here.</p>
+            </div>
+          </header>
+
+          <div class="row">
+            <label class="field" for="opening-due">
+              <span>Opening due (₹)</span>
+              <div class="money">
+                <span class="money__sign" aria-hidden="true">₹</span>
+                <input
+                  id="opening-due"
+                  :value="form.openingDue"
+                  type="text"
+                  inputmode="decimal"
+                  placeholder="0.00"
+                  :aria-invalid="fieldErrors.openingDue ? 'true' : 'false'"
+                  @blur="formatDue"
+                  @input="onOpeningDue"
+                />
+              </div>
+              <small v-if="fieldErrors.openingDue" class="field__error">{{ fieldErrors.openingDue }}</small>
+              <small v-else>Amount already owed before tracking starts.</small>
+            </label>
+
+            <label class="field" for="balance-date">
+              <span>Opening balance date <em>(optional)</em></span>
+              <div class="date" :class="{ 'is-empty': !form.balanceDate }">
+                <input id="balance-date" v-model="form.balanceDate" type="date" @input="clearStatus" />
+                <span v-if="!form.balanceDate" class="date__hint">Defaults to creation date</span>
+              </div>
+              <small>Leave blank to use the creation date in India.</small>
+            </label>
+          </div>
+
+          <div class="note">
+            <span class="note__icon" aria-hidden="true">i</span>
+            <p>
+              <strong>Entering older bills?</strong>
+              Choose a date on or before your first bill. Opening due should cover only amounts before that date.
+            </p>
+          </div>
+        </section>
+
+        <div class="actions">
+          <p v-if="success" class="banner" role="status">{{ success }}</p>
+          <p v-if="submitError" class="banner banner--error" role="alert">{{ submitError }}</p>
+          <div class="actions__row">
+            <button class="btn btn--ghost" type="button" @click="onCancel">Cancel</button>
+            <button class="btn btn--primary" type="submit" :disabled="submitting">
+              {{ submitting ? "Saving…" : "Create wholesaler" }}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <aside class="card card--next">
-        <h2>What happens next</h2>
-        <ul>
-          <li>
-            <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18">
-                <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v6h6M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </span>
-            <span>
-              <strong>Add purchase bills</strong>
-              Record bills from this wholesaler.
-            </span>
-          </li>
-          <li>
-            <span class="icon" aria-hidden="true">₹</span>
-            <span>
-              <strong>Record payments</strong>
-              Add payments made to this wholesaler.
-            </span>
-          </li>
-          <li>
-            <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18">
-                <path d="M4 19V5M4 19h16M8 16l3-4 3 2 4-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </span>
-            <span>
-              <strong>Track outstanding dues</strong>
-              See current balance based on bills and payments.
-            </span>
-          </li>
-        </ul>
+      <aside class="side">
+        <section class="card preview" aria-label="Preview">
+          <span class="side__label">Preview</span>
+          <div class="preview__who">
+            <span class="avatar" :class="`avatar--${previewTone}`" aria-hidden="true">{{ previewInitials }}</span>
+            <div>
+              <strong>{{ form.name || "Wholesaler name" }}</strong>
+              <small>{{ form.phone ? `+91 ${form.phone}` : "No phone added" }}</small>
+            </div>
+          </div>
+          <div class="preview__due">
+            <span>Opening due</span>
+            <strong>{{ previewDue }}</strong>
+          </div>
+        </section>
+
+        <section class="card next">
+          <span class="side__label">What happens next</span>
+          <ul>
+            <li>
+              <span class="icon icon--blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17">
+                  <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v6h6M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <span>
+                <strong>Add purchase bills</strong>
+                Record bills from this wholesaler.
+              </span>
+            </li>
+            <li>
+              <span class="icon icon--teal" aria-hidden="true">₹</span>
+              <span>
+                <strong>Record payments</strong>
+                Add payments made to this wholesaler.
+              </span>
+            </li>
+            <li>
+              <span class="icon icon--amber" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17">
+                  <path d="M4 19V5M4 19h16M8 16l3-4 3 2 4-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <span>
+                <strong>Track outstanding dues</strong>
+                See the current balance based on bills and payments.
+              </span>
+            </li>
+          </ul>
+        </section>
       </aside>
-
-      <div class="card">
-        <h2>Opening balance</h2>
-
-        <label class="field" for="opening-due">
-          <span>Opening due (₹)</span>
-          <input
-            id="opening-due"
-            :value="form.openingDue"
-            type="text"
-            inputmode="decimal"
-            placeholder="0.00"
-            :aria-invalid="fieldErrors.openingDue ? 'true' : 'false'"
-            @blur="formatDue"
-            @input="onOpeningDue"
-          />
-          <small>Amount already owed before tracking starts.</small>
-          <small v-if="fieldErrors.openingDue" class="field__error">{{ fieldErrors.openingDue }}</small>
-        </label>
-
-        <label class="field" for="balance-date">
-          <span>Opening balance date (optional)</span>
-          <div class="date" :class="{ 'is-empty': !form.balanceDate }">
-            <input id="balance-date" v-model="form.balanceDate" type="date" @input="clearStatus" />
-            <span v-if="!form.balanceDate" class="date__hint">Defaults to creation date</span>
-          </div>
-          <small>Leave blank to use the creation date in India.</small>
-        </label>
-
-        <div class="note">
-          <span class="note__icon" aria-hidden="true">i</span>
-          <p>
-            <strong>Entering older bills?</strong>
-            Choose a date on or before your first bill. Opening due should cover only amounts before that date.
-          </p>
-        </div>
-      </div>
-
-      <div class="actions">
-        <p v-if="success" class="banner" role="status">{{ success }}</p>
-        <p v-if="submitError" class="banner banner--error" role="alert">{{ submitError }}</p>
-        <div class="actions__row">
-          <button class="btn-save" type="submit" :disabled="submitting">
-            {{ submitting ? "Saving…" : "Create wholesaler" }}
-          </button>
-          <button class="btn-cancel" type="button" @click="onCancel">Cancel</button>
-        </div>
-      </div>
     </form>
   </section>
 </template>
 
 <script>
 import { post } from "../../../api";
+import { formatInrExact, nameInitials, nameTone } from "../../../data/wholesalers";
+
 const PHONE_INPUT = /^\d{0,10}/;
 const PHONE_VALUE = /^\d{10}$/;
 const OPENING_DUE_INPUT = /^\d*(?:\.\d{0,2})?/;
@@ -163,6 +216,17 @@ export default {
       submitError: "",
       submitting: false,
     };
+  },
+  computed: {
+    previewInitials() {
+      return this.form.name ? nameInitials(this.form.name) : "?";
+    },
+    previewTone() {
+      return this.form.name ? nameTone(this.form.name) : "grey";
+    },
+    previewDue() {
+      return `₹${formatInrExact(this.form.openingDue)}`;
+    },
   },
   methods: {
     clearStatus() {
@@ -248,60 +312,144 @@ export default {
 
 <style scoped>
 .page {
-  max-width: 1040px;
-  padding: 1.5rem 1.75rem 2.5rem;
+  min-height: 100vh;
+  background: #f6f8fa;
+  color: #0f172a;
+}
+
+.head {
+  padding: 0.9rem 1.6rem 1.1rem;
+  background: #fff;
+  border-bottom: 1px solid #eef1f4;
 }
 
 .crumb {
-  margin: 0 0 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.crumb a {
+  color: #0f766e;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.crumb span {
   color: #64748b;
-  font-size: 0.8125rem;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.7rem;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
-.lead {
-  margin: 0.35rem 0 1.25rem;
+.head p {
+  margin: 0.2rem 0 0;
   color: #64748b;
+  font-size: 0.84rem;
+}
+
+.body {
+  max-width: 1180px;
+  padding: 1.6rem 1.6rem 2.5rem;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(240px, 0.8fr);
-  gap: 1rem 1.15rem;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 1.25rem;
   align-items: start;
 }
 
-.card--next {
-  grid-column: 2;
-  grid-row: 1;
+.main,
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.side {
+  position: sticky;
+  top: 1.25rem;
 }
 
 .card {
+  padding: 1.2rem 1.25rem 1.3rem;
+  border: 1px solid #e8edf1;
+  border-radius: 16px;
   background: #fff;
-  border: 1px solid #e6eeec;
-  border-radius: 14px;
-  padding: 1.15rem 1.2rem 1.25rem;
 }
 
-h2 {
-  margin: 0 0 1rem;
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.95rem;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.card__head h2 {
+  margin: 0;
   font-size: 1rem;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.card__head p {
+  margin: 0.1rem 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.card__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 11px;
+  font-weight: 700;
+}
+
+.card__icon--teal {
+  background: #e6f6f2;
+  color: #0f766e;
+}
+
+.card__icon--amber {
+  background: #fdecc8;
+  color: #b45309;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0 1rem;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  margin-bottom: 0.95rem;
-  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  color: #334155;
+  font-size: 0.84rem;
   font-weight: 600;
+}
+
+.field em {
+  color: #94a3b8;
+  font-style: normal;
+  font-weight: 500;
 }
 
 .field abbr {
@@ -312,18 +460,21 @@ h2 {
 .field input,
 .field textarea {
   width: 100%;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.7rem 0.8rem;
-  font: inherit;
-  font-weight: 400;
-  color: #0f172a;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border: 1px solid #dfe5eb;
+  border-radius: 10px;
   background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
 .field textarea {
-  resize: vertical;
   min-height: 5.5rem;
+  padding: 0.7rem 0.85rem;
+  resize: vertical;
 }
 
 .field input::placeholder,
@@ -333,14 +484,21 @@ h2 {
 
 .field input:focus,
 .field textarea:focus {
-  outline: 2px solid rgba(15, 118, 110, 0.25);
+  outline: none;
   border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.field input[aria-invalid="true"],
+.phone:has(input[aria-invalid="true"]),
+.money:has(input[aria-invalid="true"]) {
+  border-color: #dc2626;
 }
 
 .field small {
-  font-weight: 400;
   color: #64748b;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  font-weight: 400;
 }
 
 .field .field__error {
@@ -348,35 +506,41 @@ h2 {
   font-weight: 500;
 }
 
-.field input[aria-invalid="true"],
-.phone:has(input[aria-invalid="true"]) {
-  border-color: #dc2626;
-}
-
-.phone {
+.phone,
+.money {
   display: flex;
   align-items: center;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  min-height: 44px;
+  border: 1px solid #dfe5eb;
+  border-radius: 10px;
   background: #fff;
 }
 
-.phone:focus-within {
-  outline: 2px solid rgba(15, 118, 110, 0.25);
+.phone:focus-within,
+.money:focus-within {
   border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
-.phone__code {
+.phone__code,
+.money__sign {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
   padding: 0 0.75rem;
+  border-right: 1px solid #eef1f4;
+  border-radius: 10px 0 0 10px;
+  background: #f8fafb;
   color: #64748b;
-  font-weight: 500;
-  border-right: 1px solid #e2e8f0;
+  font-weight: 600;
 }
 
-.phone input,
-.phone input:focus {
+.field .phone input,
+.field .money input,
+.field .phone input:focus,
+.field .money input:focus {
+  min-height: 42px;
   border: 0;
-  outline: none;
   box-shadow: none;
 }
 
@@ -386,67 +550,28 @@ h2 {
 
 .date__hint {
   position: absolute;
-  left: 0.8rem;
   top: 50%;
-  transform: translateY(-50%);
+  left: 0.85rem;
   color: #94a3b8;
   font-weight: 400;
   pointer-events: none;
+  transform: translateY(-50%);
 }
 
 .date.is-empty:not(:focus-within) input::-webkit-datetime-edit {
   color: transparent;
 }
 
-.card--next ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.card--next li {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  color: #64748b;
-  font-size: 0.84rem;
-  font-weight: 400;
-  line-height: 1.45;
-}
-
-.card--next strong {
-  display: block;
-  color: #0f172a;
-  font-size: 0.9rem;
-  margin-bottom: 0.1rem;
-}
-
-.icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  background: #e7f6f3;
-  color: #0f766e;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-weight: 700;
-}
-
 .note {
   display: flex;
-  gap: 0.7rem;
   align-items: flex-start;
-  background: #f8fafc;
-  border: 1px solid #e8eef2;
-  border-radius: 10px;
-  padding: 0.8rem 0.85rem;
-  color: #64748b;
-  font-size: 0.82rem;
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #e3ecf8;
+  border-radius: 12px;
+  background: #f5f9ff;
+  color: #475569;
+  font-size: 0.8rem;
   line-height: 1.45;
 }
 
@@ -456,106 +581,288 @@ h2 {
 
 .note strong {
   display: block;
+  margin-bottom: 0.1rem;
   color: #0f172a;
-  margin-bottom: 0.15rem;
 }
 
 .note__icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  border: 1.5px solid #64748b;
-  color: #475569;
-  font-size: 0.72rem;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 0.05rem;
+  border-radius: 50%;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.7rem;
   font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 0.1rem;
-}
-
-.actions {
-  grid-column: 1;
-}
-
-.banner {
-  margin: 0 0 0.75rem;
-  color: #0f766e;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.banner--error {
-  color: #b42318;
 }
 
 .actions__row {
   display: flex;
-  align-items: center;
-  gap: 0.7rem;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 
-.btn-save,
-.btn-cancel {
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 1.2rem;
+  border-radius: 10px;
   font: inherit;
-  font-size: 0.925rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  border-radius: 8px;
-  padding: 0.7rem 1.05rem;
   cursor: pointer;
 }
 
-.btn-save {
+.btn--ghost {
+  border: 1px solid #dfe5eb;
+  background: #fff;
+  color: #334155;
+}
+
+.btn--ghost:hover {
+  border-color: #cbd5e1;
+}
+
+.btn--primary {
+  border: 1px solid #0f766e;
   background: #0f766e;
   color: #fff;
-  border: 1px solid #0f766e;
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.18);
 }
 
-.btn-save:hover {
-  background: #115e59;
+.btn--primary:hover {
+  background: #0c645d;
 }
 
-.btn-save:disabled {
+.btn--primary:disabled {
   opacity: 0.7;
   cursor: default;
 }
 
-.btn-cancel {
-  background: #fff;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+.banner {
+  margin: 0 0 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #bfe6d7;
+  border-radius: 12px;
+  background: #ecf8f3;
+  color: #0f5f58;
+  font-size: 0.86rem;
+  font-weight: 600;
 }
 
-.btn-cancel:hover {
-  border-color: #cbd5e1;
+.banner--error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
-@media (max-width: 800px) {
-  .page {
-    padding: 1rem 1rem 2rem;
-  }
+.side__label {
+  display: block;
+  margin-bottom: 0.85rem;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 
-  h1 {
-    font-size: 1.45rem;
-  }
+.preview__who {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
 
+.preview__who div {
+  min-width: 0;
+}
+
+.preview__who strong {
+  display: block;
+  overflow: hidden;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview__who small {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.preview__due {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #b45309;
+  font-size: 0.8rem;
+}
+
+.preview__due strong {
+  font-size: 0.95rem;
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.avatar--grey {
+  background: #f1f4f7;
+  color: #94a3b8;
+}
+
+.avatar--teal {
+  background: #e3f6ef;
+  color: #0f766e;
+}
+
+.avatar--orange {
+  background: #fdeee2;
+  color: #c2410c;
+}
+
+.avatar--blue {
+  background: #e7f0fd;
+  color: #1d4ed8;
+}
+
+.avatar--violet {
+  background: #f1eafd;
+  color: #6d28d9;
+}
+
+.avatar--rose {
+  background: #fde8ec;
+  color: #be123c;
+}
+
+.avatar--amber {
+  background: #fdf3d8;
+  color: #a16207;
+}
+
+.next ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.next li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.next li strong {
+  display: block;
+  margin-bottom: 0.05rem;
+  color: #0f172a;
+  font-size: 0.86rem;
+}
+
+.icon {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.icon--blue {
+  background: #eaf1ff;
+  color: #1d4ed8;
+}
+
+.icon--teal {
+  background: #e6f6f2;
+  color: #0f766e;
+}
+
+.icon--amber {
+  background: #fdecc8;
+  color: #b45309;
+}
+
+@media (max-width: 980px) {
   .grid {
     grid-template-columns: 1fr;
   }
 
-  .card--next {
+  .side {
+    position: static;
+    order: -1;
+  }
+
+  .next {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .head {
+    padding: 1rem 1rem 0;
+    background: transparent;
+    border-bottom: 0;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+
+  .head p {
+    margin-top: 0.3rem;
+    font-size: 0.9rem;
+  }
+
+  .body {
+    padding: 1rem 1rem 2rem;
+  }
+
+  .side {
     display: none;
   }
 
-  .actions__row {
-    flex-direction: column;
-    align-items: stretch;
+  .card {
+    padding: 1rem;
   }
 
-  .btn-cancel {
-    background: transparent;
-    border-color: transparent;
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .actions__row {
+    flex-direction: column-reverse;
+  }
+
+  .btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
   }
 }
 </style>

@@ -88,6 +88,22 @@ export function formatPhone(phone) {
   return `${digits.slice(0, 5)} ${digits.slice(5)}`;
 }
 
+const TONES = ["teal", "orange", "blue", "violet", "rose", "amber"];
+
+export function nameInitials(name) {
+  const words = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+export function nameTone(name) {
+  let hash = 0;
+  const text = String(name || "");
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  return TONES[hash % TONES.length];
+}
+
 export function currentDue(item) {
   const opening = Number(item.openingDue) || 0;
   const purchases = Number(item.totalPurchases) || 0;

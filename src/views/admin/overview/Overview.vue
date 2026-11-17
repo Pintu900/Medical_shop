@@ -288,10 +288,17 @@
 
 <script>
 import { fetchOverallSummary } from "../../../data/reports";
-import { currentDue, fetchOutstandingDues, fetchWholesalers, formatInr, formatPhone } from "../../../data/wholesalers";
+import {
+  currentDue,
+  fetchOutstandingDues,
+  fetchWholesalers,
+  formatInr,
+  formatPhone,
+  nameInitials,
+  nameTone,
+} from "../../../data/wholesalers";
 
 const SUMMARY_LIMIT = 6;
-const TONES = ["teal", "orange", "blue", "violet", "rose", "amber"];
 
 function currentFinancialYearStart(date) {
   const year = date.getFullYear();
@@ -311,20 +318,6 @@ function formatIsoDay(value) {
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return "";
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
-}
-
-function initials(name) {
-  const words = String(name || "").trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return "?";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
-}
-
-function toneFor(name) {
-  let hash = 0;
-  const text = String(name || "");
-  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
-  return TONES[hash % TONES.length];
 }
 
 function rowDue(item) {
@@ -383,8 +376,8 @@ export default {
         .map((item) => ({
           ...item,
           due: rowDue(item),
-          initials: initials(item.wholesalerName),
-          tone: toneFor(item.wholesalerName),
+          initials: nameInitials(item.wholesalerName),
+          tone: nameTone(item.wholesalerName),
           detail: contactLine(byId.get(String(item.wholesalerId))),
         }))
         .sort((a, b) => b.due - a.due || String(a.wholesalerName || "").localeCompare(String(b.wholesalerName || "")));

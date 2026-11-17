@@ -151,6 +151,8 @@ export default {
   async created() {
     try {
       this.wholesalers = await fetchWholesalers();
+      const requested = String(this.$route.query.wholesalerId || "");
+      if (requested && this.wholesalers.some((item) => String(item.id) === requested)) this.form.wholesalerId = requested;
     } catch (err) {
       this.submitError = err.message || "Could not load wholesalers.";
     }
