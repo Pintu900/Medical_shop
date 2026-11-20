@@ -75,7 +75,7 @@
 
 <script>
 import { fetchWholesalers } from "../../../data/wholesalers";
-import { getPurchaseBill, updatePurchaseBill } from "../../../data/purchaseBills";
+import { fetchPurchaseBill, updatePurchaseBill } from "../../../data/purchaseBills";
 
 const MONEY_INPUT = /^\d*(?:\.\d{0,2})?/;
 const MONEY_VALUE = /^\d+(?:\.\d{1,2})?$/;
@@ -107,8 +107,8 @@ export default {
     },
   },
   methods: {
-    load(id) {
-      const bill = getPurchaseBill(id);
+    async load(id) {
+      const bill = await fetchPurchaseBill(id);
       this.bill = bill;
       this.errors = {};
       if (!bill) return;

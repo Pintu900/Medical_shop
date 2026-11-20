@@ -671,7 +671,7 @@ h1 {
 .stat__value {
   margin: 0.55rem 0 0.9rem;
   color: var(--stat-value, #0f172a);
-  font-size: 1.65rem;
+  font-size: 1.55rem;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.15;
@@ -780,7 +780,7 @@ h1 {
   gap: 0.55rem;
   height: 46px;
   border-radius: 10px;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -825,14 +825,14 @@ h1 {
 
 .summary h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .summary__head p {
   margin: 0.15rem 0 0;
   color: #64748b;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
 }
 
 .summary__all {
@@ -1142,13 +1142,13 @@ tbody tr:hover td {
   }
 
   h1 {
-    font-size: 1.6rem;
+    font-size: 1.45rem;
     font-weight: 800;
   }
 
   .head p {
     margin-top: 0.35rem;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     line-height: 1.45;
   }
 
@@ -1160,7 +1160,7 @@ tbody tr:hover td {
     border-radius: 999px;
     background: #e6f6f2;
     color: #0f766e;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -1190,7 +1190,7 @@ tbody tr:hover td {
     padding: 0;
     background: transparent;
     color: #0f172a;
-    font-size: 0.86rem;
+    font-size: 0.8rem;
     font-weight: 600;
   }
 
@@ -1215,7 +1215,7 @@ tbody tr:hover td {
 
   .year select {
     color: #0f5f58;
-    font-size: 0.84rem;
+    font-size: 0.8rem;
   }
 
   .body {
@@ -1247,7 +1247,7 @@ tbody tr:hover td {
   .btn-record {
     height: 50px;
     border-radius: 14px;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     font-weight: 700;
   }
 
@@ -1276,7 +1276,7 @@ tbody tr:hover td {
 
   .stat__label {
     padding-top: 0;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.05em;
   }
@@ -1296,7 +1296,7 @@ tbody tr:hover td {
 
   .stat__value {
     margin: 0.75rem 0 0.3rem;
-    font-size: clamp(1.3rem, 6.4vw, 1.75rem);
+    font-size: clamp(1.2rem, 5.8vw, 1.55rem);
     font-weight: 800;
   }
 
@@ -1306,7 +1306,7 @@ tbody tr:hover td {
     gap: 0.4rem;
     margin: 0;
     color: #475569;
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     font-weight: 500;
   }
 

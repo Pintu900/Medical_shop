@@ -1,10 +1,27 @@
 <template>
   <section class="page">
-    <p class="crumb">Purchase bills / Add purchase bill</p>
-    <h1>Add purchase bill</h1>
-    <p class="lead">Enter bill details, record a payment if any, and upload an attachment.</p>
+    <header class="head">
+      <div>
+        <RouterLink class="back" to="/admin/purchase-bills">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          Purchase bills
+        </RouterLink>
+        <h1>Add purchase bill</h1>
+        <p>Enter bill details, record a payment if any, and upload an attachment.</p>
+      </div>
+      <span class="required-note"><abbr title="required">*</abbr> Required fields</span>
+    </header>
 
-    <form class="card" novalidate @submit.prevent="onSubmit">
+    <form class="card form-card" novalidate @submit.prevent="onSubmit">
+      <div class="section-head">
+        <div>
+          <h2>Invoice details</h2>
+          <p>Use the information shown on the supplier invoice.</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v6h6M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </span>
+      </div>
       <div class="grid grid--4">
         <label class="field">
           <span>Wholesaler <abbr title="required">*</abbr></span>
@@ -36,6 +53,16 @@
         </label>
       </div>
 
+      <div class="section-divider"></div>
+      <div class="section-head">
+        <div>
+          <h2>Payment details</h2>
+          <p>Record any amount paid at the time of purchase.</p>
+        </div>
+        <span class="section-icon section-icon--blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19"><path d="M3 7h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7zM3 10h18M7 15h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </span>
+      </div>
       <div class="grid">
         <label class="field">
           <span>Total amount (₹) <abbr title="required">*</abbr></span>
@@ -95,9 +122,11 @@
       </label>
 
       <aside class="due">
-        <span>Due added (₹)</span>
+        <div>
+          <span>Due added</span>
+          <small>This amount will be added to the wholesaler's outstanding dues.</small>
+        </div>
         <strong>{{ formatInr(due) }}</strong>
-        <small>This will be added to the wholesaler's dues.</small>
       </aside>
 
       <p v-if="submitError" class="field__error" role="alert">{{ submitError }}</p>
@@ -273,35 +302,109 @@ export default {
 
 <style scoped>
 .page {
+  min-height: 100vh;
+  padding: 1.5rem 1.6rem 2.5rem;
+  background: #f6f8fa;
+  color: #0f172a;
+}
+
+.page > * {
   max-width: 1040px;
-  padding: 1.5rem 1.75rem 2.5rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.crumb,
-.lead {
-  margin: 0;
-  color: #64748b;
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
 }
 
-.crumb {
-  font-size: 0.8125rem;
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #0f766e;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: #0c645d;
 }
 
 h1 {
-  margin: 0.7rem 0 0.35rem;
-  font-size: 1.7rem;
+  margin: 0.55rem 0 0.25rem;
+  font-size: 1.65rem;
   letter-spacing: -0.03em;
 }
 
-.lead {
-  margin-bottom: 1rem;
+.head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.86rem;
+}
+
+.required-note {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.required-note abbr,
+.field abbr {
+  color: #dc2626;
+  text-decoration: none;
 }
 
 .card {
   background: #fff;
-  border: 1px solid #e6eeec;
-  border-radius: 14px;
-  padding: 1.15rem 1.2rem 1.3rem;
+  border: 1px solid #e8edf1;
+  border-radius: 16px;
+  padding: 1.3rem 1.35rem 1.35rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.section-head p {
+  margin: 0.22rem 0 0;
+  color: #94a3b8;
+  font-size: 0.76rem;
+}
+
+.section-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #e6f6f2;
+  color: #0f766e;
+}
+
+.section-icon--blue {
+  background: #e7f0fd;
+  color: #2563eb;
+}
+
+.section-divider {
+  height: 1px;
+  margin: 0.45rem 0 1.15rem;
+  background: #eef1f4;
 }
 
 .grid {
@@ -320,7 +423,7 @@ h1 {
   flex-direction: column;
   gap: 0.4rem;
   margin-bottom: 0.9rem;
-  font-size: 0.875rem;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
@@ -328,17 +431,13 @@ h1 {
   margin-bottom: 0;
 }
 
-.field abbr {
-  color: #dc2626;
-  text-decoration: none;
-}
-
 .field input,
 .field select,
 .field textarea {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 9px;
   padding: 0.7rem 0.8rem;
   font: inherit;
   font-weight: 500;
@@ -398,23 +497,35 @@ h1 {
 }
 
 .due {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   margin: 0.2rem 0 1rem;
-  background: #fff7ed;
+  border: 1px solid #f6dfae;
+  background: #fffaf0;
   border-radius: 12px;
   padding: 0.85rem 1rem;
 }
 
-.due span,
+.due span {
+  display: block;
+  color: #b45309;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
 .due small {
   display: block;
+  margin-top: 0.15rem;
   color: #9a3412;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 
 .due strong {
   display: block;
   margin: 0.15rem 0;
-  color: #c2410c;
+  color: #b45309;
   font-size: 1.35rem;
 }
 
@@ -429,7 +540,7 @@ h1 {
   font: inherit;
   font-size: 0.925rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 9px;
   padding: 0.7rem 1.05rem;
   text-align: center;
   text-decoration: none;
@@ -454,11 +565,19 @@ h1 {
 
 @media (max-width: 800px) {
   .page {
-    padding: 1rem;
+    padding: 1rem 1rem 2rem;
+  }
+
+  .head {
+    align-items: flex-start;
   }
 
   h1 {
     font-size: 1.45rem;
+  }
+
+  .required-note {
+    display: none;
   }
 
   .grid,
@@ -473,6 +592,11 @@ h1 {
     order: 2;
     border-color: transparent;
     background: transparent;
+  }
+
+  .due {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 </style>
