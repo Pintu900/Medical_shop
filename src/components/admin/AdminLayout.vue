@@ -107,6 +107,30 @@
       </section>
       <RouterView v-else />
     </div>
+
+    <nav class="admin__bottom" aria-label="Primary">
+      <RouterLink
+        v-for="item in mobileNav"
+        :key="item.to"
+        :to="item.to"
+        class="bottom-nav__link"
+        :class="{ 'is-active': isActive(item) }"
+      >
+        <span class="bottom-nav__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="23" height="23">
+            <path
+              :d="item.icon"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <span class="bottom-nav__label">{{ item.mobileLabel || item.label }}</span>
+      </RouterLink>
+    </nav>
   </div>
 </template>
 
@@ -129,6 +153,7 @@ const NAV = [
   },
   {
     label: "Purchase bills",
+    mobileLabel: "Purchases",
     to: "/admin/purchase-bills",
     match: "/admin/purchase-bills",
     icon: "M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v6h6M8 13h8M8 17h5",
@@ -176,6 +201,9 @@ export default {
       const role = this.session.user && this.session.user.role;
       if (!role) return this.nav;
       return this.nav.filter((item) => !item.ownerOnly || role === "OWNER");
+    },
+    mobileNav() {
+      return this.visibleNav.slice(0, 4);
     },
     accountName() {
       return (this.session.user && this.session.user.name) || "New Shivam Medicos";
@@ -511,7 +539,8 @@ export default {
 }
 
 .admin__top,
-.admin__backdrop {
+.admin__backdrop,
+.admin__bottom {
   display: none;
 }
 
@@ -582,6 +611,7 @@ export default {
   }
 
   .admin__side.is-open {
+    z-index: 60;
     transform: none;
   }
 
@@ -593,9 +623,75 @@ export default {
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 30;
+    z-index: 55;
     background: rgba(15, 23, 42, 0.35);
     border: 0;
+  }
+
+  .admin__bottom {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-height: 76px;
+    padding: 0.35rem 0.4rem calc(0.35rem + env(safe-area-inset-bottom));
+    border-top: 1px solid #e6edf1;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 -5px 18px rgba(15, 23, 42, 0.04);
+  }
+
+  .bottom-nav__link {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.16rem;
+    flex-direction: column;
+    padding: 0.15rem 0.1rem 0;
+    border-radius: 12px;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav__link:hover {
+    color: var(--admin-teal-dark);
+  }
+
+  .bottom-nav__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 38px;
+    border-radius: 999px;
+  }
+
+  .bottom-nav__link.is-active {
+    color: var(--admin-teal-dark);
+    font-weight: 700;
+  }
+
+  .bottom-nav__link.is-active .bottom-nav__icon {
+    background: #e8f8f5;
+    color: var(--admin-teal-dark);
+  }
+
+  .bottom-nav__label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin__main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
   }
 }
 </style>
