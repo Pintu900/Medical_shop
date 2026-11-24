@@ -11,10 +11,8 @@ export async function fetchPayments(filters) {
   }
   const hasMonth = source.month !== undefined && source.month !== null && source.month !== "";
   const hasYear = source.year !== undefined && source.year !== null && source.year !== "";
-  if (hasMonth && hasYear) {
-    search.set("month", String(source.month));
-    search.set("year", String(source.year));
-  }
+  if (hasMonth) search.set("month", String(source.month));
+  if (hasYear) search.set("year", String(source.year));
   if (source.page !== undefined && source.page !== null && source.page !== "") {
     search.set("page", String(source.page));
   }

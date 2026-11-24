@@ -8,10 +8,8 @@ export async function fetchPurchaseBills(filters) {
   }
   const hasMonth = source.month !== undefined && source.month !== null && source.month !== "";
   const hasYear = source.year !== undefined && source.year !== null && source.year !== "";
-  if (hasMonth && hasYear) {
-    search.set("month", String(source.month));
-    search.set("year", String(source.year));
-  }
+  if (hasMonth) search.set("month", String(source.month));
+  if (hasYear) search.set("year", String(source.year));
   const query = search.toString();
   const data = await get(query ? `/purchase-bills?${query}` : "/purchase-bills");
   return Array.isArray(data) ? data : [];

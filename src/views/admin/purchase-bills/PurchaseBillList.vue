@@ -15,7 +15,7 @@
 
     <div class="body">
       <section class="panel">
-        <div class="toolbar">
+        <div class="toolbar toolbar--desktop">
           <label class="search">
             <span class="sr-only">Search purchase bills</span>
             <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
@@ -50,7 +50,69 @@
           </div>
         </div>
 
-        <p v-if="periodIncomplete" class="hint">Choose both a month and a year to filter by date.</p>
+        <div class="mobile-filters">
+          <div class="mobile-filters__top">
+            <label class="search search--mobile">
+              <span class="sr-only">Search purchase bills</span>
+              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+                <path d="m16 16 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+              <input v-model="query" type="search" placeholder="Search bill or wholesaler" />
+            </label>
+            <button
+              class="filters-toggle"
+              type="button"
+              :aria-expanded="filtersOpen ? 'true' : 'false'"
+              @click="filtersOpen = !filtersOpen"
+            >
+              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16M8 5v4M15 10v4M11 15v4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+              </svg>
+              Filters
+            </button>
+          </div>
+
+          <div class="filter-chips" role="group" aria-label="Quick purchase bill filters">
+            <button class="filter-chip" :class="{ 'is-active': statusFilter === 'all' }" type="button" @click="statusFilter = 'all'">All</button>
+            <button class="filter-chip" :class="{ 'is-active': statusFilter === 'due' }" type="button" @click="statusFilter = 'due'">Due</button>
+            <button class="filter-chip" :class="{ 'is-active': statusFilter === 'pending' }" type="button" @click="statusFilter = 'pending'">Upload pending</button>
+            <label class="filter-chip filter-chip--select">
+              <span class="sr-only">Wholesaler</span>
+              <select v-model="wholesaler" aria-label="Wholesaler">
+                <option value="">Wholesaler</option>
+                <option v-for="item in wholesalerOptions" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
+              </select>
+            </label>
+            <button v-if="month" class="filter-chip filter-chip--selected" type="button" @click="month = ''">{{ monthLabel }} ×</button>
+            <button v-if="year" class="filter-chip filter-chip--selected" type="button" @click="year = ''">{{ year }} ×</button>
+          </div>
+
+          <div v-if="filtersOpen" class="mobile-filters__panel">
+            <div class="mobile-filters__panel-head">
+              <strong>Filter purchase bills</strong>
+              <button type="button" @click="clearFilters">Clear all</button>
+            </div>
+            <div class="mobile-filters__fields">
+              <label class="filter-field">
+                <span>Month</span>
+                <select v-model="month">
+                  <option value="">All months</option>
+                  <option v-for="item in months" :key="item.value" :value="item.value">{{ item.label }}</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span>Year</span>
+                <select v-model="year">
+                  <option value="">All years</option>
+                  <option v-for="item in years" :key="item" :value="item">{{ item }}</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <p class="results-count">Showing {{ filtered.length }} {{ filtered.length === 1 ? "bill" : "bills" }}</p>
+        </div>
 
         <div class="table-wrap">
           <table>
@@ -92,9 +154,9 @@
                 <td class="num paid">{{ formatInr(paidFor(bill)) }}</td>
                 <td class="num"><span class="due-value" :class="{ 'is-clear': dueFor(bill) <= 0 }">{{ formatInr(dueFor(bill)) }}</span></td>
                 <td>
-                  <span class="badge" :class="attached(bill) ? 'badge--ready' : 'badge--pending'">
+                  <span class="badge" :class="billStatus(bill).className">
                     <span class="badge__dot" aria-hidden="true"></span>
-                    {{ attached(bill) ? "Attached" : "Upload pending" }}
+                    {{ billStatus(bill).label }}
                   </span>
                 </td>
                 <td class="act"><RouterLink class="row-btn" :to="`/admin/purchase-bills/${bill.id}`">View bill</RouterLink></td>
@@ -113,9 +175,9 @@
                 <RouterLink class="bill-link" :to="`/admin/purchase-bills/${bill.id}`">{{ bill.billNumber || "No bill number" }}</RouterLink>
                 <span class="card__date">{{ formatBillDate(bill.billDate) }}</span>
               </div>
-              <span class="badge" :class="attached(bill) ? 'badge--ready' : 'badge--pending'">
+              <span class="badge" :class="billStatus(bill).className">
                 <span class="badge__dot" aria-hidden="true"></span>
-                {{ attached(bill) ? "Attached" : "Upload pending" }}
+                {{ billStatus(bill).label }}
               </span>
             </div>
 
@@ -162,7 +224,7 @@ export default {
   name: "PurchaseBillList",
   data() {
     return {
-      rows: [], wholesalers: [], wholesaler: "", month: "", year: "", months: MONTHS, years: yearOptions(), query: "", loading: false, error: "", requestId: 0, loadedKey: "",
+      rows: [], wholesalers: [], wholesaler: "", month: "", year: "", months: MONTHS, years: yearOptions(), query: "", statusFilter: "all", filtersOpen: false, loading: false, error: "", requestId: 0, loadedKey: "",
     };
   },
   computed: {
@@ -170,18 +232,46 @@ export default {
     billFilters() {
       const filters = {};
       if (this.wholesaler) filters.wholesalerId = this.wholesaler;
-      if (this.month && this.year) { filters.month = Number(this.month); filters.year = Number(this.year); }
+      if (this.month) filters.month = Number(this.month);
+      if (this.year) filters.year = Number(this.year);
       return filters;
     },
-    periodIncomplete() { return Boolean(this.month) !== Boolean(this.year); },
     emptyMessage() {
-      if (this.query.trim() || this.wholesaler || (this.month && this.year)) return "No purchase bills match these filters.";
+      if (this.query.trim() || this.statusFilter !== "all" || this.wholesaler || this.month || this.year) return "No purchase bills match these filters.";
       return "No purchase bills yet. Add your first supplier invoice to get started.";
+    },
+    monthLabel() {
+      const selected = this.months.find((item) => item.value === String(this.month));
+      return selected ? selected.label : "Month";
     },
     filtered() {
       const query = this.query.trim().toLowerCase();
-      if (!query) return this.rows;
-      return this.rows.filter((bill) => String(bill.billNumber || "").toLowerCase().includes(query) || String(bill.wholesalerName || "").toLowerCase().includes(query));
+      const selectedWholesaler = this.wholesalerOptions.find((item) => String(item.id) === String(this.wholesaler));
+      return this.rows.filter((bill) => {
+        const matchesQuery = !query
+          || String(bill.billNumber || "").toLowerCase().includes(query)
+          || String(bill.wholesalerName || "").toLowerCase().includes(query);
+        if (!matchesQuery) return false;
+
+        if (this.statusFilter === "due" && this.dueFor(bill) <= 0) return false;
+        if (this.statusFilter === "pending" && this.attached(bill)) return false;
+
+        if (this.wholesaler) {
+          const matchesId = bill.wholesalerId !== undefined && bill.wholesalerId !== null && bill.wholesalerId !== ""
+            && String(bill.wholesalerId) === String(this.wholesaler);
+          const matchesName = selectedWholesaler && String(bill.wholesalerName || "").toLowerCase() === String(selectedWholesaler.name || "").toLowerCase();
+          if (!matchesId && !matchesName) return false;
+        }
+
+        if (this.month || this.year) {
+          const date = new Date(`${bill.billDate}T00:00:00`);
+          if (Number.isNaN(date.getTime())) return false;
+          if (this.month && date.getMonth() + 1 !== Number(this.month)) return false;
+          if (this.year && date.getFullYear() !== Number(this.year)) return false;
+        }
+
+        return true;
+      });
     },
   },
   watch: {
@@ -200,6 +290,19 @@ export default {
       finally { if (this.requestId === requestId) this.loading = false; }
     },
     attached(bill) { return Array.isArray(bill.attachments) && bill.attachments.length > 0; },
+    billStatus(bill) {
+      if (this.dueFor(bill) <= 0) return { label: "Settled", className: "badge--settled" };
+      if (!this.attached(bill)) return { label: "Upload pending", className: "badge--pending" };
+      return { label: "Attached", className: "badge--ready" };
+    },
+    clearFilters() {
+      this.query = "";
+      this.statusFilter = "all";
+      this.wholesaler = "";
+      this.month = "";
+      this.year = "";
+      this.filtersOpen = false;
+    },
   },
 };
 </script>
@@ -237,6 +340,8 @@ tbody tr:hover td { background: #fbfcfd; } .num { text-align: right; } .act { wi
 .badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; } .badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; } .badge--ready { background: #ecf8f3; color: #0f766e; } .badge--pending { background: #fff6e2; color: #b45309; }
 .row-btn { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 0.7rem; border: 1px solid #dfe5eb; border-radius: 8px; background: #fff; color: #334155; font: inherit; font-size: 0.76rem; font-weight: 600; text-decoration: none; } .row-btn:hover { border-color: #b7dcd5; color: #0f766e; }
 .panel__foot { padding: 0.8rem 1.25rem; color: #64748b; font-size: 0.76rem; }
+.mobile-filters { display: none; }
+.badge--settled { background: #e7f6f3; color: #0f766e; }
 .cards { display: none; flex-direction: column; gap: 0.65rem; margin: 0; padding: 0.85rem; list-style: none; }
 .card { padding: 0.9rem; border: 1px solid #e8edf1; border-radius: 16px; background: #fff; }
 .card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
@@ -250,5 +355,32 @@ tbody tr:hover td { background: #fbfcfd; } .num { text-align: right; } .act { wi
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
 @media (max-width: 1120px) { .toolbar { flex-wrap: wrap; } .search { max-width: none; } .filters { order: 3; flex: 1 1 100%; margin-left: 0; } }
 @media (max-width: 800px) { .head { padding: 1.1rem 1rem 0; background: transparent; border-bottom: 0; } h1 { font-size: 1.6rem; font-weight: 800; } .head p { margin-top: 0.3rem; font-size: 0.9rem; } .btn-primary { height: 42px; padding: 0 0.85rem; border-radius: 12px; } .body { padding: 1rem; } .panel { margin-top: 1rem; border: 0; background: transparent; overflow: visible; } .toolbar { padding: 0 0 0.75rem; border-bottom: 0; } .search { flex-basis: 100%; max-width: none; } .search input { height: 44px; border-radius: 12px; background: #fff; } .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 0.4rem; margin-left: 0; overflow: visible; } .filter-field, .filter-field select { min-width: 0; width: 100%; } .filter-field:first-child { grid-column: 1 / -1; } .filter-field select { height: 36px; padding-right: 1.45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem; } .filter-field::after { right: 0.55rem; } .table-wrap { display: none; } .cards { display: flex; padding: 0; } .panel__foot { padding: 0.85rem 0.15rem 0; } }
+@media (max-width: 800px) {
+  .toolbar--desktop { display: none; }
+  .mobile-filters { display: block; }
+  .mobile-filters__top { display: flex; align-items: center; gap: 0.65rem; }
+  .search--mobile { flex: 1; min-width: 0; }
+  .search--mobile input { height: 52px; border-color: #bdcdcc; border-radius: 16px; background: #fff; font-size: 0.9rem; }
+  .filters-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; flex: none; height: 52px; padding: 0 0.85rem; border: 1px solid #bdcdcc; border-radius: 16px; background: #fff; color: #1f2933; font: inherit; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
+  .filters-toggle:hover, .filters-toggle[aria-expanded="true"] { border-color: #0f766e; color: #0f766e; }
+  .filter-chips { display: flex; gap: 0.55rem; overflow-x: auto; padding: 0.65rem 0 0.2rem; scrollbar-width: none; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip { display: inline-flex; align-items: center; justify-content: center; flex: none; height: 36px; padding: 0 0.85rem; border: 1px solid #bdcdcc; border-radius: 999px; background: #fff; color: #34414a; font: inherit; font-size: 0.78rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+  .filter-chip:hover { border-color: #0f766e; color: #0f766e; }
+  .filter-chip.is-active { border-color: #0f766e; background: #0f766e; color: #fff; }
+  .filter-chip--selected { border-color: #b8ddd6; background: #e7f6f3; color: #0f766e; }
+  .filter-chip--select { position: relative; padding: 0; overflow: hidden; }
+  .filter-chip--select::after { content: ""; position: absolute; right: 0.7rem; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); pointer-events: none; }
+  .filter-chip--select select { appearance: none; height: 100%; min-width: 8.5rem; padding: 0 1.8rem 0 0.85rem; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+  .mobile-filters__panel { margin-top: 0.55rem; padding: 0.85rem; border: 1px solid #d8e3e2; border-radius: 16px; background: #fff; box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06); }
+  .mobile-filters__panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.7rem; color: #1f2933; font-size: 0.86rem; }
+  .mobile-filters__panel-head button { border: 0; background: transparent; color: #0f766e; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+  .mobile-filters__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
+  .mobile-filters__fields .filter-field:first-child { grid-column: auto; }
+  .mobile-filters__fields .filter-field { display: flex; flex-direction: column; align-items: stretch; gap: 0.3rem; }
+  .mobile-filters__fields .filter-field span { color: #64748b; font-size: 0.7rem; font-weight: 700; }
+  .mobile-filters__fields .filter-field select { width: 100%; min-width: 0; height: 40px; padding-left: 0.65rem; border-radius: 10px; font-size: 0.78rem; }
+  .results-count { margin: 1.05rem 0 0.85rem; color: #34414a; font-size: 0.8rem; font-weight: 700; }
+}
 @media (max-width: 520px) { .head { align-items: flex-start; } .btn-primary span { display: none; } .btn-primary { width: 42px; padding: 0; justify-content: center; } }
 </style>
